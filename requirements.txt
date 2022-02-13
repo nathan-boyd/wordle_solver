@@ -1,0 +1,5 @@
+pyperclip
+termcolor
+selenium
+numpy
+keyboard
