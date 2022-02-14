@@ -1,4 +1,4 @@
 
 # Wordle Solver
 
-![image not found](screenshot.png?raw=true "Wordle Solver in Action")
+![image not found](docs/screenshot.png?raw=true "Wordle Solver in Action")
