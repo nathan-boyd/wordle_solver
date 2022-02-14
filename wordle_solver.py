@@ -7,6 +7,8 @@ from datetime import date
 from itertools import chain
 from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
 
 import keyboard
 import pyperclip
@@ -33,7 +35,7 @@ STRINGS = {
 CHAR_COUNT = Counter(chain.from_iterable(STRINGS))
 
 
-class WordleSolver():
+class WordleSolver:
     # enumerate each key and value of CHAR_COUNT
     # divide each value by the total count
     CHAR_FREQUENCY = {
@@ -143,9 +145,9 @@ class WordleSolver():
         possible_words = STRINGS.copy()
         word_vector = [set(string.ascii_lowercase) for _ in range(MAX_WORD_LENGTH)]
 
-        for attempt in range(0, MAX_ATTEMPTS):
-            letter_results, word = self.attempt_solution(attempt, game_app, possible_words, word_vector)
-            if 5 == letter_results.count("correct"):
+        for attempt_count in range(0, MAX_ATTEMPTS):
+            letter_results, word = self.attempt_solution(attempt_count, game_app, possible_words, word_vector)
+            if letter_results.count("correct") == MAX_WORD_LENGTH:
                 break
             letter_results.clear()
 
@@ -156,8 +158,8 @@ class WordleSolver():
         self.report_success(game_app)
 
     def report_success(self, game_app):
-        results_dir = f"{os.curdir}/logs/{datetime.today().strftime('%Y-%m-%d')}"
-        os.makedirs(results_dir)
+        results_dir = f"{os.curdir}/logs/{datetime.today().strftime('%Y-%m-%d')}/"
+        Path(results_dir).mkdir(parents=True, exist_ok=True)
 
         screen_shot_path = f"{results_dir}/screenshot.png"
         self.driver.save_screenshot(screen_shot_path)
@@ -176,10 +178,10 @@ class WordleSolver():
         with open(f"{results_dir}/game_summary.txt", 'w') as g:
             g.write(game_summary)
 
-    def attempt_solution(self, attempt, game_app, possible_words, word_vector):
+    def attempt_solution(self, attempt_count, game_app, possible_words, word_vector):
         board = self.get_element_from_shadow_by_id(game_app, "board")
 
-        print(f"\nAttempt {attempt + 1} / {MAX_ATTEMPTS}")
+        print(f"\nAttempt {attempt_count + 1} of {MAX_ATTEMPTS}")
         print(f"{len(possible_words)} Possible words")
         self.print_frequency(self.sort_by_commonality(possible_words)[:5])
 
@@ -187,7 +189,7 @@ class WordleSolver():
         print(f"{word.upper()} is the most likely answer")
 
         possible_words.remove(word)
-        letter_results = self.submit_word(word, attempt, board)
+        letter_results = self.submit_word(word, attempt_count, board)
 
         print(f"\nResults of {word.upper()}")
         self.evaluate_results(letter_results, word, word_vector)
@@ -195,18 +197,18 @@ class WordleSolver():
 
     def evaluate_results(self, letter_results, word, word_vector):
         for idx, status in enumerate(letter_results):
-            template = f"Letter {word[idx].upper()} {status}"
+            message_template = f"Letter {word[idx].upper()} {status}"
             match status:
                 case "correct":
-                    self.print_green(template)
+                    self.print_green(message_template)
                     word_vector[idx] = {word[idx]}
                 case "present":
-                    self.print_yellow(template)
-                    word_vector[idx].remove(word[idx])
+                    self.print_yellow(message_template)
+                    word_vector[idx].discard(word[idx])
                 case "absent":
-                    self.print_red(template)
+                    self.print_red(message_template)
                     for vector in word_vector:
-                        vector.remove(word[idx])
+                        vector.discard(word[idx])
 
     def __init__(self):
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
