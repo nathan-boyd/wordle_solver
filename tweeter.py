@@ -23,11 +23,12 @@ class Tweeter:
             data = file.read().rstrip()
             message = message + "\n" + data
 
-        print("Tweeting Results")
-
         if self.DEBUG:
             print("Not tweeting in debug mode")
+            print(message)
         else:
+            print("Tweeting Results")
+            print(message)
             tweet_res = self.api.PostUpdate(message)
             print(tweet_res)
 

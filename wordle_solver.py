@@ -17,7 +17,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
-ALLOWED_STRINGS_FILE = "allowed_words.txt"
+ALLOWED_STRINGS_FILE = f"{os.path.dirname(os.path.realpath(__file__))}/allowed_words.txt"
 VALID_CHARS = set(string.ascii_letters)
 MAX_ATTEMPTS = 6
 MAX_WORD_LENGTH = 5
@@ -39,7 +39,7 @@ class WordleSolver:
     # enumerate each key and value of CHAR_COUNT
     # divide each value by the total count
     CHAR_FREQUENCY = {
-        char: value / CHAR_COUNT.total()
+        char: value / sum(CHAR_COUNT.values())
         for char, value in CHAR_COUNT.items()
     }
 
@@ -215,6 +215,8 @@ class WordleSolver:
         self.driver.implicitly_wait(IMPLICIT_WAIT_SECONDS)
         self.driver.set_window_size(100, 810)
         self.driver.get(WORDLE_URL)
+        self.app_directory = os.path.dirname(os.path.realpath(__file__))
+
 
     def exit_handler(self):
         self.driver.close()

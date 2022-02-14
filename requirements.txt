@@ -1,6 +1,5 @@
-pyperclip
-termcolor
-selenium
-numpy
-keyboard
-python-twitter
+keyboard==0.13.5
+pyperclip==1.8.2
+python_twitter==3.5
+selenium==4.1.0
+webdriver_manager==3.5.2
