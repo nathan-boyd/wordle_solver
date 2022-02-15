@@ -1,0 +1,8 @@
+pyperclip
+python_twitter
+selenium
+webdriver_manager
+pyautogui
+pyvirtualdisplay
+Pillow
+pynput
