@@ -8,14 +8,21 @@ from itertools import chain
 from pathlib import Path
 from datetime import datetime
 from pathlib import Path
+import logging
+
+from pynput.keyboard import Key, Controller
 
 
-import keyboard
+import Xlib.display
+
+
 import pyperclip
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
+from pyvirtualdisplay.display import Display
+
 
 ALLOWED_STRINGS_FILE = f"{os.path.dirname(os.path.realpath(__file__))}/allowed_words.txt"
 VALID_CHARS = set(string.ascii_letters)
@@ -102,23 +109,42 @@ class WordleSolver:
         return options[0][0]
 
     def submit_word(self, word, attempt, game_board):
-        keyboard.write(word, delay=1)
-        keyboard.press_and_release('enter')
+        keyboard = Controller()
+
+        keyboard.type(word)
+        time.sleep(2)
+        keyboard.press(Key.enter)
+        time.sleep(5)
 
         rows = game_board.find_elements(By.TAG_NAME, 'game-row')
         row = self.driver.execute_script('return arguments[0].shadowRoot', rows[attempt])
         tiles = row.find_elements(By.CSS_SELECTOR, "game-tile")
 
+        logging.info(len(tiles))
+
+
+
         # get last tile from row
         tile_div = self.get_element_from_shadow_with_query(tiles[4], "div")
 
         # wait for last tile animation to stop
-        while tile_div.get_attribute("data-animation") != "idle":
+        t = 0
+        while tile_div.get_attribute("data-animation") != "idle" and t < 20:
             time.sleep(.5)
+            t += 1
+
+        p = f"/logs/attempt{attempt}.png"
+        self.driver.save_screenshot(p)
 
         letter_results = []
+        t = 0
         for tile in tiles:
+            while [tile.get_attribute("evaluation")][0] == None and t < 20:
+                time.sleep(.5)
+                t +=1
             letter_results.append([tile.get_attribute("evaluation")][0])
+
+        print(letter_results)
 
         return letter_results
 
@@ -158,20 +184,24 @@ class WordleSolver:
         self.report_success(game_app)
 
     def report_success(self, game_app):
-        results_dir = f"{os.curdir}/logs/{datetime.today().strftime('%Y-%m-%d')}/"
+        results_dir = f"/logs/{datetime.today().strftime('%Y-%m-%d')}/"
         Path(results_dir).mkdir(parents=True, exist_ok=True)
 
         screen_shot_path = f"{results_dir}/screenshot.png"
         self.driver.save_screenshot(screen_shot_path)
 
         # wait for game stats to appear
-        while self.get_element_from_shadow_with_query(game_app, "#game > game-modal > game-stats") is None:
+        t = 1
+        while self.get_element_from_shadow_with_query(game_app, "#game > game-modal > game-stats") is None and t < 20:
             time.sleep(.5)
 
         stats_panel = self.get_element_from_shadow_with_query(game_app, "#game > game-modal > game-stats")
         share_button = self.get_element_from_shadow_with_query(stats_panel, "#share-button")
         share_button.click()
         self.driver.find_element(By.TAG_NAME, 'html').click()
+
+        p = f"/logs/success.png"
+        self.driver.save_screenshot(p)
 
         game_summary = pyperclip.paste()
         print(f"{game_summary}")
@@ -211,10 +241,31 @@ class WordleSolver:
                         vector.discard(word[idx])
 
     def __init__(self):
-        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-        self.driver.implicitly_wait(IMPLICIT_WAIT_SECONDS)
-        self.driver.set_window_size(100, 810)
+
+        logging.getLogger().setLevel(logging.INFO)
+        logging.info('Initializing')
+        
+        self.driver = Display(visible=0, size=(800, 600))
+        self.driver.start()
+        logging.info('Initialized virtual display..')
+
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_experimental_option('prefs', {
+            'download.default_directory': os.getcwd(),
+            'download.prompt_for_download': False,
+        })
+
+        logging.info('Prepared chrome options..')
+        self.driver = webdriver.Chrome(chrome_options=chrome_options)
+        logging.info('Initialized chrome browser..')
         self.driver.get(WORDLE_URL)
+        logging.info('Accessed %s ..', WORDLE_URL)
+        logging.info('Page title: %s', self.driver.title)
+        self.driver.save_screenshot('/logs/foo.png')
+
+        #pyautogui._pyautogui_x11._display = Xlib.display.Display(os.environ['DISPLAY'])
+
         self.app_directory = os.path.dirname(os.path.realpath(__file__))
 
 

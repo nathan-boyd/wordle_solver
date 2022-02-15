@@ -16,6 +16,6 @@ if __name__ == '__main__':
 
     try:
         w.solve_wordle()
-        t.tweet_results()
+#        t.tweet_results()
     finally:
         w.exit_handler()
