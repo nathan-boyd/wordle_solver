@@ -197,24 +197,28 @@ class WordleSolver:
         self.logger.info(f"Calculated time to solve {self.time_to_solve} ms")
         self.logger.info(f"Solution Word {word.upper()}")
 
-        self.report_success(game_app)
+        self.save_game_summary(game_app)
 
         return self.time_to_solve
 
-    def report_success(self, game_app):
-        self.shoot_screen("game_summary")
+    def save_game_summary(self, game_app):
+        # get a screenshot before stats appear
+        self.shoot_screen("completed_game")
 
         # wait for game stats to appear
         while self.get_element_from_shadow_with_query(game_app, "#game > game-modal > game-stats") is None:
             time.sleep(.01)
+
+        # get a screenshot before stats appear
+        self.shoot_screen("stats")
 
         stats_panel = self.get_element_from_shadow_with_query(game_app, "#game > game-modal > game-stats")
         share_button = self.get_element_from_shadow_with_query(stats_panel, "#share-button")
         share_button.click()
         self.webdriver.find_element(By.TAG_NAME, 'html').click()
 
+        # get text summary
         game_summary = pyperclip.paste()
-        self.logger.info(f"{game_summary}")
         with open(f"{self.output_dir}/game_summary.txt", 'w') as g:
             g.write(game_summary)
 
