@@ -55,11 +55,11 @@ if __name__ == '__main__':
 
     logger.info("Added console handler to logger")
 
-    w = WordleSolver(in_container, app_dir, output_dir, logger)
+    w = WordleSolver(in_container, output_dir, logger)
     t = Tweeter(debug, output_dir, logger)
 
     try:
-        w.solve_wordle()
-        t.tweet_results()
+        time_to_solve_ms = w.solve_wordle()
+        t.tweet_results(time_to_solve_ms)
     finally:
         w.exit_handler()

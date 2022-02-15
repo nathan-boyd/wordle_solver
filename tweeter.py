@@ -4,8 +4,8 @@ import config
 
 class Tweeter:
 
-    def tweet_results(self):
-        message = "My wordle solver completed today's puzzle."
+    def tweet_results(self, time_to_solve_ms):
+        message = f"My Wordle solver completed today's puzzle in {time_to_solve_ms * .001} seconds."
         summary_file = f"{self.output_dir}/game_summary.txt"
 
         with open(summary_file, 'r') as file:

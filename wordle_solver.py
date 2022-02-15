@@ -33,6 +33,16 @@ STRINGS = {
 CHAR_COUNT = Counter(chain.from_iterable(STRINGS))
 
 
+@staticmethod
+def current_milli_time():
+    return round(ms_from_secs(time.time()))
+
+
+@staticmethod
+def ms_from_secs(seconds):
+    return seconds * 1000
+
+
 class WordleSolver:
     # enumerate each key and value of CHAR_COUNT
     # divide each value by the total count
@@ -99,7 +109,6 @@ class WordleSolver:
         keyboard = Controller()
         keyboard.type(word)
         keyboard.press(Key.enter)
-        time.sleep(1)
 
         # get letter rows
         rows = game_board.find_elements(By.TAG_NAME, 'game-row')
@@ -109,24 +118,39 @@ class WordleSolver:
         tiles = row.find_elements(By.CSS_SELECTOR, "game-tile")
 
         # wait for last tile animation to stop
-        waited = 0
         last_tile = self.get_element_from_shadow_with_query(tiles[4], "div")
-        while last_tile.get_attribute("data-animation") != "idle" and waited < 20:
-            time.sleep(.5)
-            waited += 1
+
+        waited_iter = 0
+        max_wait_iter = 20
+        wait_duration = .1
+
+        # wait for animation to start after submitting
+        while last_tile.get_attribute("data-animation") == "idle" and waited_iter < max_wait_iter:
+            self.wait(wait_duration)
+            waited_iter += 1
+
+        self.check_wait_iter(max_wait_iter, waited_iter)
+
+        # wait for animation to stop after submitting
+        while last_tile.get_attribute("data-animation") != "idle" and waited_iter < 20:
+            self.wait(wait_duration)
+            waited_iter += 1
+
+        self.check_wait_iter(max_wait_iter, waited_iter)
 
         self.shoot_screen(f"attempt_{attempt}")
-        self.logger.info(f"Waited {waited * .5} seconds for results")
-
-        if waited >= 10:
-            self.shoot_screen("timeout")
-            raise "Timed out waiting for results"
+        self.logger.info(f"Waited {self.time_waiting_ms} milliseconds for results")
 
         letter_results = []
         for tile in tiles:
             letter_results.append([tile.get_attribute("evaluation")][0])
 
         return letter_results
+
+    def check_wait_iter(self, max_wait_iter, waited_iter):
+        if waited_iter > max_wait_iter:
+            self.shoot_screen("timeout")
+            raise "Timed out waiting for results"
 
     def get_element_from_shadow_by_id(self, element, id):
         tpl = f"return arguments[0].shadowRoot.getElementById('{id}')"
@@ -151,24 +175,38 @@ class WordleSolver:
         possible_words = STRINGS.copy()
         word_vector = [set(string.ascii_lowercase) for _ in range(MAX_WORD_LENGTH)]
 
+        start_time_ms = current_milli_time()
+
         for attempt_count in range(0, MAX_ATTEMPTS):
             letter_results, word = self.attempt_solution(attempt_count, game_app, possible_words, word_vector)
             if letter_results.count("correct") == MAX_WORD_LENGTH:
                 break
+
+            # clear results for next attempt
             letter_results.clear()
 
-            # filter possible words with updated
+            # filter possible words with updated vectors
             possible_words = self.filter(word_vector, possible_words)
 
-        self.logger.info(f"Word: {word.upper()}")
+        end_time_ms = current_milli_time()
+        total_time = end_time_ms - start_time_ms
+        self.time_to_solve = total_time - self.time_waiting_ms
+
+        self.logger.info(f"Total time {total_time} ms")
+        self.logger.info(f"Time waiting {self.time_waiting_ms} ms")
+        self.logger.info(f"Calculated time to solve {self.time_to_solve} ms")
+        self.logger.info(f"Solution Word {word.upper()}")
+
         self.report_success(game_app)
+
+        return self.time_to_solve
 
     def report_success(self, game_app):
         self.shoot_screen("game_summary")
 
         # wait for game stats to appear
         while self.get_element_from_shadow_with_query(game_app, "#game > game-modal > game-stats") is None:
-            time.sleep(.5)
+            time.sleep(.01)
 
         stats_panel = self.get_element_from_shadow_with_query(game_app, "#game > game-modal > game-stats")
         share_button = self.get_element_from_shadow_with_query(stats_panel, "#share-button")
@@ -212,10 +250,18 @@ class WordleSolver:
                     for vector in word_vector:
                         vector.discard(word[idx])
 
+    def setup_webdriver(self):
+        self.logger.info('Setting up browser')
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.addArguments("--incognito");
+        self.webdriver = webdriver.Chrome(chrome_options=chrome_options,
+                                          service=Service(ChromeDriverManager().install()))
+
     def setup_headless_webdriver(self):
         self.logger.info('Setting chrome options..')
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument('--no-sandbox')
+        chrome_options.addArguments("--incognito");
         chrome_options.add_experimental_option('prefs', {
             'download.default_directory': os.getcwd(),
             'download.prompt_for_download': False,
@@ -228,11 +274,22 @@ class WordleSolver:
     def shoot_screen(self, file_name):
         self.webdriver.save_screenshot(f"{self.output_dir}/{file_name}.png")
 
-    def __init__(self, in_container, app_dir, output_dir, logger):
+    def wait(self, seconds):
+        self.time_waiting_ms += ms_from_secs(seconds)
+        time.sleep(seconds)
+
+    def __init__(self, in_container, output_dir, logger):
+
+        # time spent waiting on wordle to return results or animation tiles
+        self.time_waiting_ms = 0
+
+        # time taken to solve the puzzle
+        self.time_to_solve = 0
+
         self.logger = logger
         self.logger.info('Initializing WordleSolver')
 
-        self.app_directory = app_dir
+        # directory for screenshot, logs, and results for twitter
         self.output_dir = output_dir
 
         match in_container:
@@ -247,6 +304,8 @@ class WordleSolver:
                 self.webdriver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 
         self.webdriver.implicitly_wait(IMPLICIT_WAIT_SECONDS)
+        self.webdriver.set_window_size(650, 760)
+        self.webdriver.set_window_position(0, 0)
 
         self.logger.info('Opening Wordle')
         self.webdriver.get(WORDLE_URL)
@@ -266,4 +325,3 @@ class WordleSolver:
                 self.logger.info("Virtual display is shut down")
         except AttributeError:
             self.logger.info("Virtual display not running, no shutdown required")
-
