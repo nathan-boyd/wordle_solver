@@ -2,10 +2,11 @@ import twitter
 import config
 
 
-class Tweeter:
+class SocialSharer:
 
     def tweet_results(self, time_to_solve_ms):
-        message = f"My Wordle solver completed today's puzzle in {time_to_solve_ms * .001} seconds."
+        solve_time_seconds = round((time_to_solve_ms * .001), 4)
+        message = f"My Wordle solver completed today's puzzle in {solve_time_seconds} seconds."
         summary_file = f"{self.output_dir}/game_summary.txt"
 
         with open(summary_file, 'r') as file:

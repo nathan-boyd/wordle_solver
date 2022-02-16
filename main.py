@@ -1,5 +1,5 @@
 from wordle_solver import WordleSolver
-from tweeter import Tweeter
+from socialsharer import SocialSharer
 import os
 from datetime import date
 import logging
@@ -55,10 +55,9 @@ if __name__ == '__main__':
 
     logger.info("Added console handler to logger")
 
-    w = WordleSolver(in_container, output_dir, logger)
-    t = Tweeter(debug, output_dir, logger)
-
     try:
+        w = WordleSolver(in_container, output_dir, logger)
+        t = SocialSharer(debug, output_dir, logger)
         time_to_solve_ms = w.solve_wordle()
         t.tweet_results(time_to_solve_ms)
     finally:
