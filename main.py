@@ -55,6 +55,7 @@ if __name__ == '__main__':
 
     logger.info("Added console handler to logger")
 
+    w = None
     try:
         w = WordleSolver(in_container, output_dir, logger)
         t = SocialSharer(debug, output_dir, logger)
