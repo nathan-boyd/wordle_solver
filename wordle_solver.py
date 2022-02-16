@@ -6,9 +6,10 @@ from collections import Counter
 from datetime import date
 from itertools import chain
 from pathlib import Path
+from pynput.keyboard import Key, Controller
+
 
 import pyperclip
-from pynput.keyboard import Key, Controller
 from pyvirtualdisplay.display import Display
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
