@@ -5,5 +5,4 @@ webdriver_manager
 pyautogui
 pyvirtualdisplay
 Pillow
-python-twitter
 pynput

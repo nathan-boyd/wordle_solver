@@ -1,4 +1,4 @@
-from wordle_solver import WordleSolver
+from wordlesolver import WordleSolver
 from socialsharer import SocialSharer
 import os
 from datetime import date
