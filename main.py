@@ -55,11 +55,12 @@ if __name__ == '__main__':
 
     logger.info("Added console handler to logger")
 
-    w = None
     try:
-        w = WordleSolver(in_container, output_dir, logger)
-        t = SocialSharer(debug, output_dir, logger)
-        time_to_solve_ms = w.solve_wordle()
-        t.tweet_results(time_to_solve_ms)
+        solver = WordleSolver(in_container, output_dir, logger)
+        social_sharer = SocialSharer(debug, output_dir, logger)
+        time_to_solve_ms = solver.solve_wordle()
+
+        social_sharer.tweet_results(time_to_solve_ms)
     finally:
-        w.exit_handler()
+        if solver is not None:
+            solver.exit_handler()

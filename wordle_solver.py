@@ -265,7 +265,7 @@ class WordleSolver:
         self.logger.info('Setting chrome options..')
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument('--no-sandbox')
-        chrome_options.addArguments("--incognito");
+        chrome_options.add_argument("--incognito");
         chrome_options.add_experimental_option('prefs', {
             'download.default_directory': os.getcwd(),
             'download.prompt_for_download': False,
