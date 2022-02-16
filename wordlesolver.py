@@ -16,7 +16,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
-ALLOWED_STRINGS_FILE = f"{os.path.dirname(os.path.realpath(__file__))}/allowed_words.txt"
+ALLOWED_STRINGS_FILE = f"{os.path.dirname(os.path.realpath(__file__))}/allowed_strings.txt"
 VALID_CHARS = set(string.ascii_letters)
 MAX_ATTEMPTS = 6
 MAX_WORD_LENGTH = 5
@@ -220,6 +220,12 @@ class WordleSolver:
 
         # get text summary
         game_summary = pyperclip.paste()
+
+        # the linux chromium driver uses white squares instad of black for absent letters
+        white_square = "⬜"
+        black_square = "⬛"
+        game_summary = game_summary.replace(white_square, black_square)
+
         with open(f"{self.output_dir}/game_summary.txt", 'w') as g:
             g.write(game_summary)
 
