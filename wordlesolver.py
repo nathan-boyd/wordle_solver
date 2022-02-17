@@ -1,20 +1,18 @@
-import operator
-import os
-import string
-import time
 from collections import Counter
 from datetime import date
 from itertools import chain
 from pathlib import Path
 from pynput.keyboard import Key, Controller
-
-
-import pyperclip
 from pyvirtualdisplay.display import Display
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
+import operator
+import os
+import pyperclip
+import string
+import time
 
 ALLOWED_STRINGS_FILE = f"{os.path.dirname(os.path.realpath(__file__))}/allowed_strings.txt"
 VALID_CHARS = set(string.ascii_letters)
@@ -38,13 +36,16 @@ CHAR_COUNT = Counter(chain.from_iterable(STRINGS))
 def current_milli_time():
     return round(ms_from_secs(time.time()))
 
+
 @staticmethod
 def secs_from_ms(ms):
     return ms / 1000
 
+
 @staticmethod
 def ms_from_secs(seconds):
     return seconds * 1000
+
 
 class WordleSolver:
     # enumerate each key and value of CHAR_COUNT
@@ -109,9 +110,8 @@ class WordleSolver:
         return options[0][0]
 
     def submit_word(self, word, attempt, game_board):
-        keyboard = Controller()
-        keyboard.type(word)
-        keyboard.press(Key.enter)
+        self.keyboard.type(word)
+        self.keyboard.press(Key.enter)
 
         # get letter rows
         rows = game_board.find_elements(By.TAG_NAME, 'game-row')
@@ -295,6 +295,7 @@ class WordleSolver:
         time.sleep(secs_from_ms(ms))
 
     def __init__(self, in_container, output_dir, logger):
+        self.keyboard = Controller()
 
         # time spent waiting on wordle to return results or animation tiles
         self.time_waiting_ms = 0
