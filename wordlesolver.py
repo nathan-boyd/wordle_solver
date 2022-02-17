@@ -290,7 +290,6 @@ class WordleSolver:
         time.sleep(secs_from_ms(ms))
 
     def __init__(self, in_container, output_dir, logger):
-        self.keyboard = Controller()
 
         # time spent waiting on wordle to return results or animation tiles
         self.time_waiting_ms = 0
@@ -325,6 +324,9 @@ class WordleSolver:
         self.logger.info('Accessed %s ..', WORDLE_URL)
         self.logger.info('Page title: %s', self.webdriver.title)
         self.shoot_screen("init")
+
+        # keyboard init needs to happen after creation of virtual display
+        self.keyboard = Controller()
 
     def exit_handler(self):
         self.logger.info("Shutting down webdriver")
