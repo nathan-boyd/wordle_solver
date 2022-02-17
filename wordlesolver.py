@@ -1,25 +1,23 @@
+import operator
+import os
+import string
+import time
 from collections import Counter
 from datetime import date
 from itertools import chain
 from pathlib import Path
-from pynput.keyboard import Key, Controller
-from pyvirtualdisplay.display import Display
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
-from webdriver_manager.chrome import ChromeDriverManager
-import operator
-import os
-import pyperclip
-import string
-import time
 
-ALLOWED_STRINGS_FILE = f"{os.path.dirname(os.path.realpath(__file__))}/allowed_strings.txt"
-VALID_CHARS = set(string.ascii_letters)
+import pyperclip
+from pynput.keyboard import Key, Controller
+from selenium.webdriver.common.by import By
+
+from browserbuilder import BrowserBuilder
+
 MAX_ATTEMPTS = 6
 MAX_WORD_LENGTH = 5
 WORDLE_URL = "https://www.nytimes.com/games/wordle/index.html"
-IMPLICIT_WAIT_SECONDS = 5
+ALLOWED_STRINGS_FILE = f"{os.path.dirname(os.path.realpath(__file__))}/allowed_strings.txt"
+VALID_CHARS = set(string.ascii_letters)
 
 # set comprehension to generate a set of valid wordle words
 STRINGS = {
@@ -107,7 +105,10 @@ class WordleSolver:
 
         # alpha sort words with same commonality them for idempotency
         options.sort(key=lambda y: y[0])
-        return options[0][0]
+
+        word = options[0][0]
+        possible_words.remove(word)
+        return word
 
     def submit_word(self, word, attempt, game_board):
         self.keyboard.type(word)
@@ -123,11 +124,13 @@ class WordleSolver:
         # wait for last tile animation to stop
         last_tile = self.get_element_from_shadow_with_query(tiles[4], "div")
 
-        self.wait_for_condition(self.tile_is_idle, last_tile)
-        self.wait_for_condition(self.tile_is_not_idle, last_tile)
+        waited_ms = self.wait_for_condition_end(self.tile_is_idle, last_tile)
+        self.logger.info(f"Waited {waited_ms} for tile animation to start")
+
+        waited_ms = self.wait_for_condition_end(self.tile_is_not_idle, last_tile)
+        self.logger.info(f"Waited {waited_ms} for tile animation to stop")
 
         self.shoot_screen(f"attempt_{attempt}")
-        self.logger.info(f"Waited {self.time_waiting_ms} milliseconds for results")
 
         letter_results = []
         for tile in tiles:
@@ -135,7 +138,7 @@ class WordleSolver:
 
         return letter_results
 
-    def wait_for_condition(self, condition, *args):
+    def wait_for_condition_end(self, condition, *args):
         wait_ms = 0
         max_wait_ms = 5000
         wait_duration_ms = 50
@@ -146,6 +149,7 @@ class WordleSolver:
             wait_ms += wait_duration_ms
 
         self.check_wait_iter(wait_ms, max_wait_ms)
+        return wait_ms
 
     @staticmethod
     def tile_is_idle(tile):
@@ -160,13 +164,13 @@ class WordleSolver:
             self.shoot_screen("timeout")
             raise "Timed out waiting for results"
 
-    def get_element_from_shadow_by_id(self, element, id):
-        tpl = f"return arguments[0].shadowRoot.getElementById('{id}')"
-        return self.webdriver.execute_script(tpl, element)
+    def get_element_from_shadow_by_id(self, shadow, element_id):
+        tpl = f"return arguments[0].shadowRoot.getElementById('{element_id}')"
+        return self.webdriver.execute_script(tpl, shadow)
 
-    def get_element_from_shadow_with_query(self, element, query):
+    def get_element_from_shadow_with_query(self, shadow, query):
         tpl = f"return arguments[0].shadowRoot.querySelector('{query}')"
-        return self.webdriver.execute_script(tpl, element)
+        return self.webdriver.execute_script(tpl, shadow)
 
     def solve_wordle(self):
 
@@ -213,7 +217,6 @@ class WordleSolver:
         word = self.get_most_likely_word(possible_words)
         self.logger.info(f"{word.upper()} is the most likely answer")
 
-        possible_words.remove(word)
         letter_results = self.submit_word(word, attempt_count, board)
 
         self.logger.info(f"Results of {word.upper()}")
@@ -262,28 +265,6 @@ class WordleSolver:
         with open(f"{self.output_dir}/game_summary.txt", 'w') as g:
             g.write(game_summary)
 
-    def setup_webdriver(self):
-        self.logger.info('Setting chrome options')
-        chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument("--incognito")
-
-        self.logger.info('Initializing Chrome browser')
-        return webdriver.Chrome(chrome_options=chrome_options,
-                                          service=Service(ChromeDriverManager().install()))
-
-    def setup_headless_webdriver(self):
-        self.logger.info('Setting chrome options')
-        chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument("--incognito")
-        chrome_options.add_experimental_option('prefs', {
-            'download.default_directory': os.getcwd(),
-            'download.prompt_for_download': False,
-        })
-
-        self.logger.info('Initializing Chrome browser')
-        return webdriver.Chrome(chrome_options=chrome_options)
-
     def shoot_screen(self, file_name):
         self.webdriver.save_screenshot(f"{self.output_dir}/{file_name}.png")
 
@@ -305,21 +286,8 @@ class WordleSolver:
         # directory for screenshot, logs, and results for twitter
         self.output_dir = output_dir
 
-        match in_container:
-            case True:
-                self.logger.info('Setting up virtual display')
-                self.display = Display(visible=0, size=(800, 600))
-                self.display.start()
-                self.logger.info('Initialized virtual display')
-                self.logger.info('Configuring browser')
-                self.webdriver = self.setup_headless_webdriver()
-            case False:
-                self.logger.info('Configuring browser')
-                self.webdriver = self.setup_webdriver()
-
-        self.webdriver.implicitly_wait(IMPLICIT_WAIT_SECONDS)
-        self.webdriver.set_window_size(650, 760)
-        self.webdriver.set_window_position(0, 0)
+        browser_builder = BrowserBuilder(logger, in_container)
+        self.webdriver = browser_builder.build_browser()
 
         self.logger.info('Opening Wordle')
         self.webdriver.get(WORDLE_URL)
