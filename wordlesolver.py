@@ -263,14 +263,16 @@ class WordleSolver:
             g.write(game_summary)
 
     def setup_webdriver(self):
-        self.logger.info('Setting up browser')
+        self.logger.info('Setting chrome options')
         chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument("--incognito");
+        chrome_options.add_argument("--incognito")
+
+        self.logger.info('Initializing Chrome browser')
         return webdriver.Chrome(chrome_options=chrome_options,
                                           service=Service(ChromeDriverManager().install()))
 
     def setup_headless_webdriver(self):
-        self.logger.info('Setting chrome options..')
+        self.logger.info('Setting chrome options')
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument("--incognito")
@@ -308,10 +310,11 @@ class WordleSolver:
                 self.logger.info('Setting up virtual display')
                 self.display = Display(visible=0, size=(800, 600))
                 self.display.start()
-                self.logger.info('Initialized virtual display..')
+                self.logger.info('Initialized virtual display')
+                self.logger.info('Configuring browser')
                 self.webdriver = self.setup_headless_webdriver()
             case False:
-                self.logger.info('Setting up browser')
+                self.logger.info('Configuring browser')
                 self.webdriver = self.setup_webdriver()
 
         self.webdriver.implicitly_wait(IMPLICIT_WAIT_SECONDS)
@@ -321,7 +324,7 @@ class WordleSolver:
         self.logger.info('Opening Wordle')
         self.webdriver.get(WORDLE_URL)
 
-        self.logger.info('Accessed %s ..', WORDLE_URL)
+        self.logger.info('Accessed %s', WORDLE_URL)
         self.logger.info('Page title: %s', self.webdriver.title)
         self.shoot_screen("init")
 

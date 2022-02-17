@@ -7,25 +7,30 @@ from pathlib import Path
 from distutils import util
 
 
-def get_bool_from_env(env_name, logger):
-    logger.info(f"Getting bool from env var {env_name}")
+def get_bool_from_env(env_name, i_logger):
+    i_logger.info(f"Getting bool from env var {env_name}")
     env_val = os.getenv(env_name)
 
-    logger.info(f"{env_name} value {env_val}")
+    i_logger.info(f"{env_name} value {env_val}")
     if env_val is None:
         raise KeyError(f"ENV var not set {env_name}")
 
     env_bool = bool(util.strtobool(env_val))
-    logger.info(f"{env_name} bool value {env_bool}")
+    i_logger.info(f"{env_name} bool value {env_bool}")
     return env_bool
 
 
 if __name__ == '__main__':
-
-    logging.info("Initializing main")
     log_formatter = logging.Formatter("%(asctime)s [%(levelname)4.4s] %(message)s")
     logger = logging.getLogger()
     logger.setLevel("INFO")
+
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(log_formatter)
+    logger.addHandler(consoleHandler)
+    logger.info("Added console handler to logger")
+
+    logging.info("Initializing main")
 
     debug = get_bool_from_env("DEBUG", logger)
     in_container = get_bool_from_env("RUNNING_IN_CONTAINER", logger)
@@ -41,20 +46,11 @@ if __name__ == '__main__':
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     logger.info(f"Logs output dir {output_dir}")
 
-    # remove default handler to prevent double logging
-    logger.removeHandler(logging.getLogger().handlers[0])
-
     file_handler = logging.FileHandler("{0}/{1}.log".format(output_dir, "wordle_log"))
     file_handler.setFormatter(log_formatter)
     logger.addHandler(file_handler)
 
     logger.info("Added file handler to logger")
-
-    consoleHandler = logging.StreamHandler()
-    consoleHandler.setFormatter(log_formatter)
-    logger.addHandler(consoleHandler)
-
-    logger.info("Added console handler to logger")
 
     try:
         solver = WordleSolver(in_container, output_dir, logger)
