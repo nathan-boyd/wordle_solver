@@ -332,10 +332,3 @@ class WordleSolver:
         self.logger.info("Shutting down webdriver")
         self.webdriver.close()
         self.logger.info("Webdriver is shut down")
-        try:
-            if self.display is not None:
-                self.logger.info("Shutting down virtual display")
-                self.display.stop()
-                self.logger.info("Virtual display is shut down")
-        except AttributeError:
-            self.logger.info("Virtual display not running, no shutdown required")
