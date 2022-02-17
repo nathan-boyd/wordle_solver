@@ -11,4 +11,4 @@ Xvfb :1 -screen 0 1024x768x16 &> xvfb.log  &
 
 echo "Starting Solver"
 
-export DISPLAY=:1 && export && python3 "$APP_DIR/main.py"
+export DISPLAY=:1 python3 "$APP_DIR/main.py"
