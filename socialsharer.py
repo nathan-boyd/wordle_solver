@@ -1,17 +1,22 @@
 import twitter
 import config
+import re
 
 
 class SocialSharer:
 
     def tweet_results(self, time_to_solve_ms):
         solve_time_seconds = round((time_to_solve_ms * .001), 4)
-        message = f"My #wordle solver completed today's puzzle in {solve_time_seconds} seconds."
         summary_file = f"{self.output_dir}/game_summary.txt"
 
         with open(summary_file, 'r') as file:
             data = file.read().rstrip()
-            game_summary = message + "\n" + data
+
+        regex = r".*Wordle\ (\d{3})"
+        game_number = match.group(1) if (match := re.search(regex, data)) else ''
+
+        message = f"My #wordle solver completed #wordle{game_number} in {solve_time_seconds} seconds."
+        game_summary = message + "\n" + data
 
         if self.debug:
             self.logger.info("Not sending tweet in debug mode")
