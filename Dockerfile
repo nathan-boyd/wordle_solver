@@ -19,7 +19,7 @@ WORKDIR /app
 COPY . .
 
 ENV DISPLAY=:1
-ENV DEBUG true
-ENV RUNNING_IN_CONTAINER true
+ENV DEBUG=true
+ENV RUNNING_IN_CONTAINER=true
 
 CMD ./scripts/container_start.sh
