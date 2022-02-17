@@ -38,11 +38,13 @@ CHAR_COUNT = Counter(chain.from_iterable(STRINGS))
 def current_milli_time():
     return round(ms_from_secs(time.time()))
 
+@staticmethod
+def secs_from_ms(ms):
+    return ms / 1000
 
 @staticmethod
 def ms_from_secs(seconds):
     return seconds * 1000
-
 
 class WordleSolver:
     # enumerate each key and value of CHAR_COUNT
@@ -121,23 +123,8 @@ class WordleSolver:
         # wait for last tile animation to stop
         last_tile = self.get_element_from_shadow_with_query(tiles[4], "div")
 
-        waited_iter = 0
-        max_wait_iter = 20
-        wait_duration = .1
-
-        # wait for animation to start after submitting
-        while last_tile.get_attribute("data-animation") == "idle" and waited_iter < max_wait_iter:
-            self.wait(wait_duration)
-            waited_iter += 1
-
-        self.check_wait_iter(max_wait_iter, waited_iter)
-
-        # wait for animation to stop after submitting
-        while last_tile.get_attribute("data-animation") != "idle" and waited_iter < 20:
-            self.wait(wait_duration)
-            waited_iter += 1
-
-        self.check_wait_iter(max_wait_iter, waited_iter)
+        self.wait_for_condition(self.tile_is_idle, last_tile)
+        self.wait_for_condition(self.tile_is_not_idle, last_tile)
 
         self.shoot_screen(f"attempt_{attempt}")
         self.logger.info(f"Waited {self.time_waiting_ms} milliseconds for results")
@@ -148,8 +135,28 @@ class WordleSolver:
 
         return letter_results
 
-    def check_wait_iter(self, max_wait_iter, waited_iter):
-        if waited_iter > max_wait_iter:
+    def wait_for_condition(self, condition, *args):
+        wait_ms = 0
+        max_wait_ms = 5000
+        wait_duration_ms = 50
+
+        # wait for animation to start after submitting
+        while condition(*args) and wait_ms < max_wait_ms:
+            self.wait(wait_duration_ms)
+            wait_ms += wait_duration_ms
+
+        self.check_wait_iter(wait_ms, max_wait_ms)
+
+    @staticmethod
+    def tile_is_idle(tile):
+        return tile.get_attribute("data-animation") == "idle"
+
+    @staticmethod
+    def tile_is_not_idle(tile):
+        return tile.get_attribute("data-animation") != "idle"
+
+    def check_wait_iter(self, waited_ms, max_waited_ms):
+        if waited_ms > max_waited_ms:
             self.shoot_screen("timeout")
             raise "Timed out waiting for results"
 
@@ -180,11 +187,9 @@ class WordleSolver:
 
         for attempt_count in range(0, MAX_ATTEMPTS):
             letter_results, word = self.attempt_solution(attempt_count, game_app, possible_words, word_vector)
+
             if letter_results.count("correct") == MAX_WORD_LENGTH:
                 break
-
-            # clear results for next attempt
-            letter_results.clear()
 
             # filter possible words with updated vectors
             possible_words = self.filter(word_vector, possible_words)
@@ -285,9 +290,9 @@ class WordleSolver:
     def shoot_screen(self, file_name):
         self.webdriver.save_screenshot(f"{self.output_dir}/{file_name}.png")
 
-    def wait(self, seconds):
-        self.time_waiting_ms += ms_from_secs(seconds)
-        time.sleep(seconds)
+    def wait(self, ms):
+        self.time_waiting_ms += ms
+        time.sleep(secs_from_ms(ms))
 
     def __init__(self, in_container, output_dir, logger):
 
