@@ -125,10 +125,10 @@ class WordleSolver:
         last_tile = self.get_element_from_shadow_with_query(tiles[4], "div")
 
         waited_ms = self.wait_for_condition_end(self.tile_is_idle, last_tile)
-        self.logger.info(f"Waited {waited_ms} for tile animation to start")
+        self.logger.info(f"Waited {waited_ms}ms for tile animation to start")
 
         waited_ms = self.wait_for_condition_end(self.tile_is_not_idle, last_tile)
-        self.logger.info(f"Waited {waited_ms} for tile animation to stop")
+        self.logger.info(f"Waited {waited_ms}ms for tile animation to stop")
 
         self.shoot_screen(f"attempt_{attempt}")
 
