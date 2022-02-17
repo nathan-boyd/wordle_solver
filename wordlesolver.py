@@ -179,6 +179,7 @@ class WordleSolver:
 
         # the main game div
         game_app = self.webdriver.find_element(By.TAG_NAME, 'game-app')
+        game_board = self.get_element_from_shadow_by_id(game_app, "board")
 
         possible_words = STRINGS.copy()
         word_vector = [set(string.ascii_lowercase) for _ in range(MAX_WORD_LENGTH)]
@@ -186,11 +187,9 @@ class WordleSolver:
         start_time_ms = current_milli_time()
 
         for attempt_count in range(0, MAX_ATTEMPTS):
-            letter_results, word = self.attempt_solution(attempt_count, game_app, possible_words, word_vector)
-
+            letter_results, word = self.attempt_solution(attempt_count, game_board, possible_words, word_vector)
             if letter_results.count("correct") == MAX_WORD_LENGTH:
                 break
-
             # filter possible words with updated vectors
             possible_words = self.filter(word_vector, possible_words)
 
@@ -204,39 +203,9 @@ class WordleSolver:
         self.logger.info(f"Solution Word {word.upper()}")
 
         self.save_game_summary(game_app)
-
         return self.time_to_solve
 
-    def save_game_summary(self, game_app):
-        # get a screenshot before stats appear
-        self.shoot_screen("completed_game")
-
-        # wait for game stats to appear
-        while self.get_element_from_shadow_with_query(game_app, "#game > game-modal > game-stats") is None:
-            time.sleep(.01)
-
-        # get a screenshot before stats appear
-        self.shoot_screen("stats")
-
-        stats_panel = self.get_element_from_shadow_with_query(game_app, "#game > game-modal > game-stats")
-        share_button = self.get_element_from_shadow_with_query(stats_panel, "#share-button")
-        share_button.click()
-        self.webdriver.find_element(By.TAG_NAME, 'html').click()
-
-        # get text summary
-        game_summary = pyperclip.paste()
-
-        # the linux chromium driver uses white squares instad of black for absent letters
-        white_square = "⬜"
-        black_square = "⬛"
-        game_summary = game_summary.replace(white_square, black_square)
-
-        with open(f"{self.output_dir}/game_summary.txt", 'w') as g:
-            g.write(game_summary)
-
-    def attempt_solution(self, attempt_count, game_app, possible_words, word_vector):
-        board = self.get_element_from_shadow_by_id(game_app, "board")
-
+    def attempt_solution(self, attempt_count, board, possible_words, word_vector):
         self.logger.info(f"Attempt {attempt_count + 1} of {MAX_ATTEMPTS}")
         self.logger.info(f"{len(possible_words)} Possible words")
         self.print_frequency(self.sort_by_commonality(possible_words)[:5])
@@ -266,23 +235,49 @@ class WordleSolver:
                     for vector in word_vector:
                         vector.discard(word[idx])
 
+    def save_game_summary(self, game_app):
+        # get a screenshot before stats appear
+        self.shoot_screen("completed_game")
+
+        # wait for game stats to appear
+        while self.get_element_from_shadow_with_query(game_app, "#game > game-modal > game-stats") is None:
+            self.wait(500)
+
+        # get a screenshot before stats appear
+        self.shoot_screen("stats")
+
+        stats_panel = self.get_element_from_shadow_with_query(game_app, "#game > game-modal > game-stats")
+        share_button = self.get_element_from_shadow_with_query(stats_panel, "#share-button")
+        share_button.click()
+        self.webdriver.find_element(By.TAG_NAME, 'html').click()
+
+        # get text summary
+        game_summary = pyperclip.paste()
+
+        # the linux chromium driver uses white squares instead of black for absent letters
+        white_square = "⬜"
+        black_square = "⬛"
+        game_summary = game_summary.replace(white_square, black_square)
+
+        with open(f"{self.output_dir}/game_summary.txt", 'w') as g:
+            g.write(game_summary)
+
     def setup_webdriver(self):
         self.logger.info('Setting up browser')
         chrome_options = webdriver.ChromeOptions()
-        chrome_options.addArguments("--incognito");
-        self.webdriver = webdriver.Chrome(chrome_options=chrome_options,
+        chrome_options.add_argument("--incognito");
+        return webdriver.Chrome(chrome_options=chrome_options,
                                           service=Service(ChromeDriverManager().install()))
 
     def setup_headless_webdriver(self):
         self.logger.info('Setting chrome options..')
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument("--incognito");
+        chrome_options.add_argument("--incognito")
         chrome_options.add_experimental_option('prefs', {
             'download.default_directory': os.getcwd(),
             'download.prompt_for_download': False,
         })
-        self.logger.info('Set chrome options')
 
         self.logger.info('Initializing Chrome browser')
         return webdriver.Chrome(chrome_options=chrome_options)
@@ -318,7 +313,7 @@ class WordleSolver:
                 self.webdriver = self.setup_headless_webdriver()
             case False:
                 self.logger.info('Setting up browser')
-                self.webdriver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+                self.webdriver = self.setup_webdriver()
 
         self.webdriver.implicitly_wait(IMPLICIT_WAIT_SECONDS)
         self.webdriver.set_window_size(650, 760)

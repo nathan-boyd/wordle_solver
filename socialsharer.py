@@ -6,7 +6,7 @@ class SocialSharer:
 
     def tweet_results(self, time_to_solve_ms):
         solve_time_seconds = round((time_to_solve_ms * .001), 4)
-        message = f"My Wordle solver completed today's puzzle in {solve_time_seconds} seconds."
+        message = f"My #wordle solver completed today's puzzle in {solve_time_seconds} seconds."
         summary_file = f"{self.output_dir}/game_summary.txt"
 
         with open(summary_file, 'r') as file:
