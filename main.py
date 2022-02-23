@@ -69,5 +69,7 @@ if __name__ == '__main__':
         social_sharer = SocialSharer(debug, output_dir, logger)
         time_to_solve_ms = solver.solve_wordle()
         social_sharer.tweet_results(time_to_solve_ms)
+    except Exception as e:
+        logger.error(e)
     finally:
         solver.exit_handler()

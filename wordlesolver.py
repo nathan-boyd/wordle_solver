@@ -44,6 +44,8 @@ def secs_from_ms(ms):
 def ms_from_secs(seconds):
     return seconds * 1000
 
+class FailedSolve(Exception):
+    pass
 
 class WordleSolver:
     # enumerate each key and value of CHAR_COUNT
@@ -162,7 +164,7 @@ class WordleSolver:
     def check_wait_iter(self, waited_ms, max_waited_ms):
         if waited_ms > max_waited_ms:
             self.shoot_screen("timeout")
-            raise "Timed out waiting for results"
+            raise TimeoutError("Timed out waiting for results")
 
     def get_element_from_shadow_by_id(self, shadow, element_id):
         tpl = f"return arguments[0].shadowRoot.getElementById('{element_id}')"
@@ -190,12 +192,17 @@ class WordleSolver:
 
         start_time_ms = current_milli_time()
 
+        solved = False
         for attempt_count in range(0, MAX_ATTEMPTS):
             letter_results, word = self.attempt_solution(attempt_count, game_board, possible_words, word_vector)
             if letter_results.count("correct") == MAX_WORD_LENGTH:
+                solved = True
                 break
             # filter possible words with updated vectors
             possible_words = self.filter(word_vector, possible_words)
+
+        if not solved:
+            raise FailedSolve("Failed to solve puzzle")
 
         end_time_ms = current_milli_time()
         total_time = end_time_ms - start_time_ms
