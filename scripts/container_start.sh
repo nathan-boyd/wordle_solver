@@ -8,6 +8,7 @@ APP_DIR="$(dirname "$SCRIPT_DIR")"
 echo "Starting Xvfb"
 
 Xvfb :1 -screen 0 1024x768x16 &> xvfb.log  &
+sleep 1
 
 echo "Starting Solver"
 
