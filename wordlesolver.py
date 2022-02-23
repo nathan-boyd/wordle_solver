@@ -44,8 +44,10 @@ def secs_from_ms(ms):
 def ms_from_secs(seconds):
     return seconds * 1000
 
+
 class FailedSolve(Exception):
     pass
+
 
 class WordleSolver:
     # enumerate each key and value of CHAR_COUNT
