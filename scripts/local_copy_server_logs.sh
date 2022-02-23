@@ -1,7 +1,7 @@
 #!/bin/bash
 
-FROM="/home/nathan/wordle_solver/logs/2022-02-16/"
-TO="$HOME/Desktop/storage/engineering/wordle_solver_logs/"
+FROM="/home/nathan/wordle_solver/logs/"
+TO="$HOME/Desktop/storage/engineering/wordle_solver/logs/"
 
 echo "Copying Logs"
 echo "    from: $FROM"
