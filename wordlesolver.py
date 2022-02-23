@@ -50,8 +50,7 @@ class FailedSolve(Exception):
 
 
 class WordleSolver:
-    # enumerate each key and value of CHAR_COUNT
-    # divide each value by the total count
+    # a set of all characters and their frequencies
     CHAR_FREQUENCY = {
         char: value / sum(CHAR_COUNT.values())
         for char, value in CHAR_COUNT.items()
@@ -88,31 +87,31 @@ class WordleSolver:
     def filter(self, word_vector, possible_words):
         return [word for word in possible_words if self.apply_vector(word, word_vector)]
 
-    def print_green(self, skk):
-        self.logger.info("\033[92m{}\033[00m".format(skk))
+    def print_green(self, message):
+        self.logger.info("\033[92m{}\033[00m".format(message))
 
-    def print_yellow(self, skk):
-        self.logger.info("\033[93m{}\033[00m".format(skk))
+    def print_yellow(self, message):
+        self.logger.info("\033[93m{}\033[00m".format(message))
 
-    def print_red(self, skk):
-        self.logger.info("\033[91m{}\033[00m".format(skk))
+    def print_red(self, message):
+        self.logger.info("\033[91m{}\033[00m".format(message))
 
     def get_most_likely_word(self, possible_words):
         idx = 0
         sorted_words = self.sort_by_commonality(possible_words)
-        options = [sorted_words[idx]]
+        word_options_with_same_commonality = [sorted_words[idx]]
 
         # make a list of words with same commonality as selected word
         while len(sorted_words) > 1 and sorted_words[0][1] == sorted_words[idx + 1][1]:
-            options.append(sorted_words[idx + 1])
+            word_options_with_same_commonality.append(sorted_words[idx + 1])
             idx += 1
 
         # alpha sort words with same commonality them for idempotency
-        options.sort(key=lambda y: y[0])
+        word_options_with_same_commonality.sort(key=lambda y: y[0])
 
-        word = options[0][0]
-        possible_words.remove(word)
-        return word
+        selected_word = word_options_with_same_commonality[0][0]
+        possible_words.remove(selected_word)
+        return selected_word
 
     def submit_word(self, word, attempt, game_board):
         self.keyboard.type(word)
@@ -289,16 +288,16 @@ class WordleSolver:
         # time taken to solve the puzzle
         self.time_to_solve = 0
 
-        self.logger = logger
-        self.logger.info('Initializing WordleSolver')
-
         # directory for screenshot, logs, and results for twitter
         self.output_dir = output_dir
+
+        self.logger = logger
+        self.logger.info('Initializing WordleSolver')
 
         browser_builder = BrowserBuilder(logger, in_container)
         self.webdriver = browser_builder.build_browser()
 
-        self.logger.info('Opening Wordle')
+        self.logger.info('Opening Wordle URL')
         self.webdriver.get(WORDLE_URL)
 
         self.logger.info('Accessed %s', WORDLE_URL)
