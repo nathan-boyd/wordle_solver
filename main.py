@@ -4,10 +4,8 @@ import os
 from datetime import date
 from pathlib import Path
 from distutils import util
+from logger import Logger
 
-import queue
-import logging
-from logging.handlers import QueueHandler
 
 
 def get_bool_from_env(env_name, i_logger):
@@ -23,26 +21,10 @@ def get_bool_from_env(env_name, i_logger):
     return env_bool
 
 
-def setup_logging(i_formatter):
-    que = queue.Queue(-1)
-    queue_handler = QueueHandler(que)
-
-    i_logger = logging.getLogger()
-    logging.getLogger()
-    i_logger.addHandler(queue_handler)
-
-    i_logger.setLevel("INFO")
-
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(i_formatter)
-    i_logger.addHandler(console_handler)
-
-    return i_logger
-
-
 if __name__ == '__main__':
-    log_formatter = logging.Formatter("%(asctime)s [%(levelname)4.4s] %(message)s")
-    logger = setup_logging(log_formatter)
+    logwrapper = Logger()
+    logger = logwrapper.get_logger()
+
     logger.info("Initializing main")
 
     debug = get_bool_from_env("DEBUG", logger)
@@ -57,16 +39,14 @@ if __name__ == '__main__':
         output_dir = f"{app_dir}/logs/{date.today().strftime('%Y-%m-%d')}"
 
     Path(output_dir).mkdir(parents=True, exist_ok=True)
-    logger.info(f"Logs output dir {output_dir}")
+    logwrapper.set_filehandler(output_dir)
 
-    file_handler = logging.FileHandler(f"{output_dir}/wordle.log")
-    file_handler.setFormatter(log_formatter)
-    logger.addHandler(file_handler)
-    logger.info("Added file handler to logger")
+    logger.info(f"Configured logging output dir {output_dir}")
+
+    solver = WordleSolver(in_container, output_dir, logger)
+    social_sharer = SocialSharer(debug, output_dir, logger)
 
     try:
-        solver = WordleSolver(in_container, output_dir, logger)
-        social_sharer = SocialSharer(debug, output_dir, logger)
         time_to_solve_ms = solver.solve_wordle()
         social_sharer.tweet_results(time_to_solve_ms)
     except Exception as e:
