@@ -8,20 +8,6 @@ from browserbuilder import BrowserBuilder
 
 WORDLE_URL = "https://www.nytimes.com/games/wordle/index.html"
 
-@staticmethod
-def current_milli_time():
-    return round(ms_from_secs(time.time()))
-
-
-@staticmethod
-def secs_from_ms(ms):
-    return ms / 1000
-
-
-@staticmethod
-def ms_from_secs(seconds):
-    return seconds * 1000
-
 class BrowserWrapper:
 
     @staticmethod
@@ -80,7 +66,7 @@ class BrowserWrapper:
 
     def wait(self, ms):
         self.time_waiting_ms += ms
-        time.sleep(secs_from_ms(ms))
+        time.sleep(self.util.secs_from_ms(ms))
 
     def shoot_screen(self, file_name):
         self.webdriver.save_screenshot(f"{self.output_dir}/{file_name}.png")
@@ -125,11 +111,12 @@ class BrowserWrapper:
         self.webdriver.close()
         self.logger.info("Webdriver is shut down")
 
-    def __init__(self, in_container, output_dir):
+    def __init__(self, in_container, output_dir, util):
 
         self.time_waiting_ms = 0
         self.logger = logging.getLogger("browser")
         self.output_dir = output_dir
+        self.util = util
 
         browser_builder = BrowserBuilder(in_container)
         self.webdriver = browser_builder.build_browser()

@@ -8,6 +8,7 @@ import logging
 from logger import CustomLogger
 from browserwrapper import BrowserWrapper
 import traceback
+from util import Util
 
 
 def get_bool_from_env(env_name):
@@ -37,10 +38,9 @@ if __name__ == '__main__':
     logger = logging.getLogger("main")
     logger.info("Initializing main")
 
-    app_dir = os.path.dirname(os.path.realpath(__file__))
-
-    browser_wrapper = BrowserWrapper(in_container, output_dir)
-    solver = WordleSolver(output_dir, browser_wrapper)
+    util = Util()
+    browser_wrapper = BrowserWrapper(in_container, output_dir, util)
+    solver = WordleSolver(output_dir, browser_wrapper, util)
     social_sharer = SocialSharer(debug, output_dir)
 
     try:

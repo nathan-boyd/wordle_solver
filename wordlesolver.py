@@ -2,7 +2,6 @@ import logging
 import operator
 import os
 import string
-import time
 from collections import Counter
 from datetime import date
 from itertools import chain
@@ -23,21 +22,6 @@ STRINGS = {
 
 # a count of letter occurrences in the words list
 CHAR_COUNT = Counter(chain.from_iterable(STRINGS))
-
-
-@staticmethod
-def current_milli_time():
-    return round(ms_from_secs(time.time()))
-
-
-@staticmethod
-def secs_from_ms(ms):
-    return ms / 1000
-
-
-@staticmethod
-def ms_from_secs(seconds):
-    return seconds * 1000
 
 
 class FailedSolve(Exception):
@@ -116,9 +100,9 @@ class WordleSolver:
 
         possible_words = STRINGS.copy()
         word_vector = [set(string.ascii_lowercase) for _ in range(MAX_WORD_LENGTH)]
+        start_time_ms = self.util.current_milli_time()
 
-        start_time_ms = current_milli_time()
-
+        word = ""
         solved = False
         for attempt_count in range(0, MAX_ATTEMPTS):
 
@@ -135,13 +119,14 @@ class WordleSolver:
             if letter_results.count("correct") == MAX_WORD_LENGTH:
                 solved = True
                 break
+
             # filter possible words with updated vectors
             possible_words = self.filter(word_vector, possible_words)
 
         if not solved:
             raise FailedSolve("Failed to solve puzzle")
 
-        end_time_ms = current_milli_time()
+        end_time_ms = self.util.current_milli_time()
         total_time = end_time_ms - start_time_ms
         self.time_to_solve = total_time - self.time_waiting_ms
 
@@ -168,7 +153,12 @@ class WordleSolver:
                     for vector in word_vector:
                         vector.discard(word[idx])
 
-    def __init__(self, output_dir, browser_wrapper):
+    def __init__(self, output_dir, browser_wrapper, util):
+
+        self.logger = logging.getLogger("solver")
+        self.logger.info('Initializing WordleSolver')
+
+        self.util = util
 
         # directory for screenshot, logs, and results for twitter
         self.output_dir = output_dir
@@ -179,6 +169,3 @@ class WordleSolver:
 
         # time taken to solve the puzzle
         self.time_to_solve = 0
-
-        self.logger = logging.getLogger("solver")
-        self.logger.info('Initializing WordleSolver')

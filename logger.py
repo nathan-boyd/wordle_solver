@@ -4,7 +4,6 @@ from datetime import date
 
 
 class ColorFormatter(logging.Formatter):
-    
     grey = "\x1b[38;20m"
     yellow = "\x1b[33;20m"
     red = "\x1b[31;20m"
@@ -28,8 +27,8 @@ class ColorFormatter(logging.Formatter):
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
 
-class FileFormatter(logging.Formatter):
 
+class FileFormatter(logging.Formatter):
     format = "[%(asctime)s] [%(name).6s] [%(levelname).4s] [%(filename)s:%(lineno)d] %(message)s"
 
     FORMATS = {
