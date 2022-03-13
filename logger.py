@@ -1,7 +1,10 @@
 import logging
+import os
+from datetime import date
 
 
-class CustomFormatter(logging.Formatter):
+class ColorFormatter(logging.Formatter):
+    
     grey = "\x1b[38;20m"
     yellow = "\x1b[33;20m"
     red = "\x1b[31;20m"
@@ -25,13 +28,39 @@ class CustomFormatter(logging.Formatter):
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
 
+class FileFormatter(logging.Formatter):
+
+    format = "[%(asctime)s] [%(name).6s] [%(levelname).4s] [%(filename)s:%(lineno)d] %(message)s"
+
+    FORMATS = {
+        logging.DEBUG: format,
+        logging.INFO: format,
+        logging.WARNING: format,
+        logging.ERROR: format,
+        logging.CRITICAL: format
+    }
+
+    def format(self, record):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt)
+        return formatter.format(record)
+
 
 class CustomLogger(logging.Logger):
 
     def __init__(self, name):
         logging.Logger.__init__(self, name, logging.DEBUG)
-        color_formatter = CustomFormatter()
+
         console = logging.StreamHandler()
-        console.setFormatter(color_formatter)
+        console.setFormatter(ColorFormatter())
         self.addHandler(console)
+
+        app_dir = os.path.dirname(os.path.realpath(__file__))
+        output_dir = f"{app_dir}/logs/{date.today().strftime('%Y-%m-%d')}"
+
+        # single process logging is thread safe, if we multiproc we'll need to change this
+        file_handler = logging.FileHandler(f"{output_dir}/wordle.log")
+        file_handler.setFormatter(FileFormatter())
+        self.addHandler(file_handler)
+
         return
