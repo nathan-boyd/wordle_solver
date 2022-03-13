@@ -30,12 +30,8 @@ class CustomLogger(logging.Logger):
 
     def __init__(self, name):
         logging.Logger.__init__(self, name, logging.DEBUG)
-
         color_formatter = CustomFormatter()
-
         console = logging.StreamHandler()
         console.setFormatter(color_formatter)
-
-
         self.addHandler(console)
         return
