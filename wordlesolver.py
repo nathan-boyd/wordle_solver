@@ -280,7 +280,7 @@ class WordleSolver:
         self.time_waiting_ms += ms
         time.sleep(secs_from_ms(ms))
 
-    def __init__(self, in_container, output_dir, logger):
+    def __init__(self, in_container, output_dir, browser_wrapper, logger):
 
         # time spent waiting on wordle to return results or animation tiles
         self.time_waiting_ms = 0
@@ -290,6 +290,8 @@ class WordleSolver:
 
         # directory for screenshot, logs, and results for twitter
         self.output_dir = output_dir
+
+        self.browser_wrapper = browser_wrapper
 
         self.logger = logger
         self.logger.info('Initializing WordleSolver')

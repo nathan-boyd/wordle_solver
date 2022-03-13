@@ -4,7 +4,9 @@ import os
 from datetime import date
 from pathlib import Path
 from distutils import util
-from logger import Logger
+import logging
+from logger import CustomFormatter
+from browserwrapper import BrowserWrapper
 
 
 
@@ -22,28 +24,27 @@ def get_bool_from_env(env_name, i_logger):
 
 
 if __name__ == '__main__':
-    logwrapper = Logger()
-    logger = logwrapper.get_logger()
 
-    logger.info("Initializing main")
+    app_dir = os.path.dirname(os.path.realpath(__file__))
+    output_dir = f"{app_dir}/logs/{date.today().strftime('%Y-%m-%d')}"
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
+
+    logger = logging.getLogger("main")
+    logger.setLevel(logging.DEBUG)
+
+    # create console handler with a higher log level
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    ch.setFormatter(CustomFormatter())
+    logger.addHandler(ch)
 
     debug = get_bool_from_env("DEBUG", logger)
     in_container = get_bool_from_env("RUNNING_IN_CONTAINER", logger)
 
     app_dir = os.path.dirname(os.path.realpath(__file__))
-    logger.info(f"App dir {app_dir}")
 
-    if in_container:
-        output_dir = f"/logs/{date.today().strftime('%Y-%m-%d')}"
-    else:
-        output_dir = f"{app_dir}/logs/{date.today().strftime('%Y-%m-%d')}"
-
-    Path(output_dir).mkdir(parents=True, exist_ok=True)
-    logwrapper.set_filehandler(output_dir)
-
-    logger.info(f"Configured logging output dir {output_dir}")
-
-    solver = WordleSolver(in_container, output_dir, logger)
+    browser_wrapper = BrowserWrapper()
+    solver = WordleSolver(in_container, output_dir, browser_wrapper, logger)
     social_sharer = SocialSharer(debug, output_dir, logger)
 
     try:
@@ -53,3 +54,5 @@ if __name__ == '__main__':
         logger.error(e)
     finally:
         solver.exit_handler()
+
+

@@ -1,33 +1,26 @@
-import queue
 import logging
-from logging.handlers import QueueHandler
 
+class CustomFormatter(logging.Formatter):
 
-class Logger:
+    grey = "\x1b[38;20m"
+    yellow = "\x1b[33;20m"
+    red = "\x1b[31;20m"
+    bold_red = "\x1b[31;1m"
+    reset = "\x1b[0m"
 
-    def get_logger(self):
-        return self.logger
+    f1 = "[%(asctime)s] [%(name).4s]"
+    f2 = " [%(levelname).4s]"
+    f3 = " [%(filename)s:%(lineno)d] %(message)s"
 
-    def set_filehandler(self, output_dir):
-        file_handler = logging.FileHandler(f"{output_dir}/wordle.log")
-        file_handler.setFormatter(self.log_format)
-        self.logger.addHandler(file_handler)
-        self.logger.info("Added file handler to logger")
+    FORMATS = {
+        logging.DEBUG: grey + f1 + grey + f2 + reset + f3,
+        logging.INFO: grey + f1 + grey + f2 + reset + f3,
+        logging.WARNING: grey + f1 + yellow + f2 + reset + f3,
+        logging.ERROR: grey + f1 + red + f2 + reset + f3,
+        logging.CRITICAL: grey + f1 + bold_red + f2 + reset + f3
+    }
 
-    def __init__(self):
-        self.log_format = logging.Formatter("[%(asctime)s] [%(levelname)4.4s] [%(filename)s:%(lineno)d] %(message)s")
-
-        que = queue.Queue(-1)
-        queue_handler = QueueHandler(que)
-
-        i_logger = logging.getLogger()
-        logging.getLogger()
-        i_logger.addHandler(queue_handler)
-
-        i_logger.setLevel("INFO")
-
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(self.log_format)
-        i_logger.addHandler(console_handler)
-
-        self.logger = i_logger
+    def format(self, record):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt)
+        return formatter.format(record)
