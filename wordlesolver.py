@@ -1,3 +1,4 @@
+import logging
 import operator
 import os
 import string
@@ -280,7 +281,11 @@ class WordleSolver:
         self.time_waiting_ms += ms
         time.sleep(secs_from_ms(ms))
 
-    def __init__(self, in_container, output_dir, browser_wrapper, logger):
+    def __init__(self, in_container, output_dir, browser_wrapper):
+
+        # directory for screenshot, logs, and results for twitter
+        self.output_dir = output_dir
+        self.browser_wrapper = browser_wrapper
 
         # time spent waiting on wordle to return results or animation tiles
         self.time_waiting_ms = 0
@@ -288,15 +293,10 @@ class WordleSolver:
         # time taken to solve the puzzle
         self.time_to_solve = 0
 
-        # directory for screenshot, logs, and results for twitter
-        self.output_dir = output_dir
-
-        self.browser_wrapper = browser_wrapper
-
-        self.logger = logger
+        self.logger = logging.getLogger("solver")
         self.logger.info('Initializing WordleSolver')
 
-        browser_builder = BrowserBuilder(logger, in_container)
+        browser_builder = BrowserBuilder(in_container)
         self.webdriver = browser_builder.build_browser()
 
         self.logger.info('Opening Wordle URL')

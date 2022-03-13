@@ -1,3 +1,5 @@
+import logging
+
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
@@ -33,8 +35,8 @@ class BrowserBuilder:
     def build_browser(self):
         return self.webdriver
 
-    def __init__(self, logger, in_container):
-        self.logger = logger
+    def __init__(self, in_container):
+        self.logger = logging.getLogger("builder")
 
         match in_container:
             case True:

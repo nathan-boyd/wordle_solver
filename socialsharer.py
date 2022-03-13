@@ -1,3 +1,5 @@
+import logging
+
 import twitter
 import config
 import re
@@ -27,9 +29,9 @@ class SocialSharer:
             tweet_res = self.twitter_api.PostUpdate(game_summary)
             self.logger.info(tweet_res)
 
-    def __init__(self, debug, output_dir, logger):
+    def __init__(self, debug, output_dir):
         self.output_dir = output_dir
-        self.logger = logger
+        self.logger = logging.getLogger("social")
         self.debug = debug
         self.logs_dir = output_dir
         self.twitter_api = twitter.Api(consumer_key=config.consumer_key,
