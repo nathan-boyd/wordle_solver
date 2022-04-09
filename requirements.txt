@@ -1,8 +1,9 @@
-pyperclip
+pyperclip~=1.8.2
 python_twitter
-selenium
+selenium~=4.1.0
 webdriver_manager
 pyautogui
-pyvirtualdisplay
+pyvirtualdisplay~=3.0
 Pillow
-pynput
+pynput~=1.7.6
+pytest~=7.1.1

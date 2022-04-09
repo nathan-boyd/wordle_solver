@@ -6,6 +6,7 @@ from collections import Counter
 from datetime import date
 from itertools import chain
 from pathlib import Path
+import pytest
 
 MAX_ATTEMPTS = 6
 MAX_WORD_LENGTH = 5
@@ -65,15 +66,6 @@ class WordleSolver:
 
     def filter(self, word_vector, possible_words):
         return [word for word in possible_words if self.apply_vector(word, word_vector)]
-
-    def print_green(self, message):
-        self.logger.info("\033[92m{}\033[00m".format(message))
-
-    def print_yellow(self, message):
-        self.logger.info("\033[93m{}\033[00m".format(message))
-
-    def print_red(self, message):
-        self.logger.info("\033[91m{}\033[00m".format(message))
 
     def get_most_likely_word(self, possible_words):
         idx = 0
@@ -136,20 +128,21 @@ class WordleSolver:
         self.logger.info(f"Solution Word {word.upper()}")
 
         self.browser_wrapper.save_game_summary()
-        return self.time_to_solve
+
+        return (solved, self.time_to_solve)
 
     def evaluate_results(self, letter_results, word, word_vector):
         for idx, status in enumerate(letter_results):
             message_template = f"Letter {word[idx].upper()} {status}"
             match status:
                 case "correct":
-                    self.print_green(message_template)
+                    self.util.print_green(message_template)
                     word_vector[idx] = {word[idx]}
                 case "present":
-                    self.print_yellow(message_template)
+                    self.util.print_yellow(message_template)
                     word_vector[idx].discard(word[idx])
                 case "absent":
-                    self.print_red(message_template)
+                    self.util.print_red(message_template)
                     for vector in word_vector:
                         vector.discard(word[idx])
 
@@ -169,3 +162,4 @@ class WordleSolver:
 
         # time taken to solve the puzzle
         self.time_to_solve = 0
+

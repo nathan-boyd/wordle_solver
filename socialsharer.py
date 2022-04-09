@@ -7,7 +7,7 @@ import re
 
 class SocialSharer:
 
-    def tweet_results(self, time_to_solve_ms):
+    def tweet_results(self, solved, time_to_solve_ms):
         solve_time_seconds = round((time_to_solve_ms * .001), 4)
         summary_file = f"{self.output_dir}/game_summary.txt"
 
@@ -17,7 +17,11 @@ class SocialSharer:
         regex = r".*Wordle\ (\d{3})"
         game_number = match.group(1) if (match := re.search(regex, data)) else ''
 
-        message = f"My #wordle solver completed #wordle{game_number} in {solve_time_seconds} seconds."
+        if solved:
+            message = f"My #wordle solver completed #wordle{game_number} in {solve_time_seconds} seconds."
+        else:
+            message = f"My #wordle solver couldn't quite figure out #wordle{game_number}, but it tried its best and took {solve_time_seconds} seconds."
+
         game_summary = message + "\n" + data
 
         if self.debug:
