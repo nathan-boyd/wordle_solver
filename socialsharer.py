@@ -1,5 +1,4 @@
 import logging
-
 import twitter
 import config
 import re

@@ -22,7 +22,6 @@ def get_bool_from_env(env_name):
 
 
 if __name__ == '__main__':
-
     debug = get_bool_from_env("DEBUG")
     in_container = get_bool_from_env("RUNNING_IN_CONTAINER")
     app_dir = os.path.dirname(os.path.realpath(__file__))

@@ -8,6 +8,7 @@ from browserbuilder import BrowserBuilder
 
 WORDLE_URL = "https://www.nytimes.com/games/wordle/index.html"
 
+
 class BrowserWrapper:
 
     @staticmethod
@@ -137,4 +138,3 @@ class BrowserWrapper:
 
         # keyboard init needs to happen after creation of virtual display
         self.keyboard = Controller()
-

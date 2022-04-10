@@ -28,10 +28,12 @@ class MockBrowserWrapper:
 
 
 class TestWordleSolver:
-    @pytest.mark.parametrize("target_word", [
-        "ultra",
+
+    @pytest.mark.parametrize("target_word,will_solve", [
+        ("ultra", True),
+        ("aaaaa", False)
     ])
-    def test_simple_case(self, target_word):
+    def test_simple_case(self, target_word, will_solve):
         mb = MockBrowserWrapper(target_word)
 
         app_dir = os.path.dirname(os.path.realpath(__file__))
@@ -40,5 +42,5 @@ class TestWordleSolver:
 
         s = WordleSolver(output_dir, mb, util)
         result, time_to_solve = s.solve_wordle()
-        assert result is True
-        assert time_to_solve > 0
+
+        assert result is will_solve

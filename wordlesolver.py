@@ -6,7 +6,6 @@ from collections import Counter
 from datetime import date
 from itertools import chain
 from pathlib import Path
-import pytest
 
 MAX_ATTEMPTS = 6
 MAX_WORD_LENGTH = 5
@@ -29,7 +28,12 @@ class FailedSolve(Exception):
     pass
 
 
+class AllWordsEliminated(Exception):
+    pass
+
+
 class WordleSolver:
+
     # a set of all characters and their frequencies
     CHAR_FREQUENCY = {
         char: value / sum(CHAR_COUNT.values())
@@ -68,6 +72,9 @@ class WordleSolver:
         return [word for word in possible_words if self.apply_vector(word, word_vector)]
 
     def get_most_likely_word(self, possible_words):
+        if len(possible_words) <= 0:
+            raise AllWordsEliminated()
+
         idx = 0
         sorted_words = self.sort_by_commonality(possible_words)
         word_options_with_same_commonality = [sorted_words[idx]]
@@ -85,11 +92,17 @@ class WordleSolver:
         return selected_word
 
     def solve_wordle(self):
-
         self.logger.info("##################################################")
         self.logger.info(f"#           Solving Wordle {date.today()}            #")
         self.logger.info("##################################################")
 
+        try:
+            return self.solve_wordle_throws()
+        except AllWordsEliminated:
+            self.logger.error("all candidate words eliminated")
+            return False, -1
+
+    def solve_wordle_throws(self):
         possible_words = STRINGS.copy()
         word_vector = [set(string.ascii_lowercase) for _ in range(MAX_WORD_LENGTH)]
         start_time_ms = self.util.current_milli_time()
@@ -108,6 +121,7 @@ class WordleSolver:
 
             self.logger.info(f"Results of {word.upper()}")
             self.evaluate_results(letter_results, word, word_vector)
+
             if letter_results.count("correct") == MAX_WORD_LENGTH:
                 solved = True
                 break
@@ -116,20 +130,21 @@ class WordleSolver:
             possible_words = self.filter(word_vector, possible_words)
 
         if not solved:
-            raise FailedSolve("Failed to solve puzzle")
+            return False, -1
 
+        self.capture_game_metrics(start_time_ms, word)
+
+        return solved, self.time_to_solve
+
+    def capture_game_metrics(self, start_time_ms, word):
         end_time_ms = self.util.current_milli_time()
         total_time = end_time_ms - start_time_ms
         self.time_to_solve = total_time - self.time_waiting_ms
-
         self.logger.info(f"Total time {total_time} ms")
         self.logger.info(f"Time waiting {self.time_waiting_ms} ms")
         self.logger.info(f"Calculated time to solve {self.time_to_solve} ms")
         self.logger.info(f"Solution Word {word.upper()}")
-
         self.browser_wrapper.save_game_summary()
-
-        return (solved, self.time_to_solve)
 
     def evaluate_results(self, letter_results, word, word_vector):
         for idx, status in enumerate(letter_results):
@@ -147,7 +162,6 @@ class WordleSolver:
                         vector.discard(word[idx])
 
     def __init__(self, output_dir, browser_wrapper, util):
-
         self.logger = logging.getLogger("solver")
         self.logger.info('Initializing WordleSolver')
 
@@ -162,4 +176,3 @@ class WordleSolver:
 
         # time taken to solve the puzzle
         self.time_to_solve = 0
-
