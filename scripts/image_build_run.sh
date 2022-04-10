@@ -8,6 +8,6 @@ mkdir -p ./logs
 docker build . -t wordle_solver
 
 docker run -it --rm \
-  -v $(pwd)/logs:/logs \
+  -v $(pwd)/logs:/app/logs \
   -e DEBUG=true \
   wordle_solver:latest 
