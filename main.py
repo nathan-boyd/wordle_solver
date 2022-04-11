@@ -20,7 +20,8 @@ if __name__ == '__main__':
 
     logging.setLoggerClass(CustomLogger)
     logger = logging.getLogger("main")
-    logger.info("Initializing main")
+    logger.info("initializing main")
+    logger.info(f"output_dir: {output_dir}")
 
     browser_wrapper = BrowserWrapper(in_container, output_dir, util)
     solver = WordleSolver(output_dir, browser_wrapper, util)
