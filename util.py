@@ -41,7 +41,7 @@ class Util:
         in_container = self.get_bool_from_env("RUNNING_IN_CONTAINER")
 
         if in_container:
-            output_dir = f"/logs/{date.today().strftime('%Y-%m-%d')}"
+            output_dir = f"/app/logs/{date.today().strftime('%Y-%m-%d')}"
         else:
             app_dir = self.get_app_dir()
             output_dir = f"{app_dir}/logs/{date.today().strftime('%Y-%m-%d')}"
