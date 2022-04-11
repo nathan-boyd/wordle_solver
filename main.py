@@ -1,43 +1,27 @@
-from wordlesolver import WordleSolver
-from socialsharer import SocialSharer
-import os
-from datetime import date
-from pathlib import Path
-from distutils import util
 import logging
-from logger import CustomLogger
-from browserwrapper import BrowserWrapper
+import os
 import traceback
+from pathlib import Path
+
+from browserwrapper import BrowserWrapper
+from logger import CustomLogger
+from socialsharer import SocialSharer
 from util import Util
-
-
-def get_bool_from_env(env_name):
-    env_val = os.getenv(env_name)
-
-    if env_val is None:
-        raise KeyError(f"ENV var not set {env_name}")
-
-    env_bool = bool(util.strtobool(env_val))
-    return env_bool
-
+from wordlesolver import WordleSolver
 
 if __name__ == '__main__':
-    debug = get_bool_from_env("DEBUG")
-    in_container = get_bool_from_env("RUNNING_IN_CONTAINER")
+    util = Util()
+    debug = util.get_bool_from_env("DEBUG")
+    in_container = util.get_bool_from_env("RUNNING_IN_CONTAINER")
     app_dir = os.path.dirname(os.path.realpath(__file__))
 
-    if in_container:
-        output_dir = f"/logs/{date.today().strftime('%Y-%m-%d')}"
-    else:
-        output_dir = f"{app_dir}/logs/{date.today().strftime('%Y-%m-%d')}"
-
+    output_dir = util.get_output_directory()
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     logging.setLoggerClass(CustomLogger)
     logger = logging.getLogger("main")
     logger.info("Initializing main")
 
-    util = Util()
     browser_wrapper = BrowserWrapper(in_container, output_dir, util)
     solver = WordleSolver(output_dir, browser_wrapper, util)
     social_sharer = SocialSharer(debug, output_dir)

@@ -1,6 +1,7 @@
 import logging
 import os
 from datetime import date
+from util import Util
 
 
 class ColorFormatter(logging.Formatter):
@@ -56,8 +57,8 @@ class CustomLogger(logging.Logger):
         console.setFormatter(ColorFormatter())
         self.addHandler(console)
 
-        app_dir = os.path.dirname(os.path.realpath(__file__))
-        output_dir = f"{app_dir}/logs/{date.today().strftime('%Y-%m-%d')}"
+        util = Util()
+        output_dir = util.get_output_directory()
 
         # single process logging is thread safe, if we multiproc we'll need to change this
         file_handler = logging.FileHandler(f"{output_dir}/wordle.log")
