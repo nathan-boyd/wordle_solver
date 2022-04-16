@@ -31,7 +31,7 @@ class TestWordleSolver:
 
     @pytest.mark.parametrize("target_word,will_solve", [
         ("ultra", True),
-        ("aaaaa", False)
+        ("watch", True),
     ])
     def test_simple_case(self, target_word, will_solve):
         mb = MockBrowserWrapper(target_word)
