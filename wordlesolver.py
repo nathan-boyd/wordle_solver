@@ -61,8 +61,7 @@ class WordleSolver:
             template = f"{word.upper():<5} | {freq:<5.4}"
             self.logger.info(template)
 
-    @staticmethod
-    def apply_vector(word, word_vector):
+    def apply_vector(self, word, word_vector):
         for letter, v_letter in zip(word, word_vector):
             if letter not in v_letter:
                 return False

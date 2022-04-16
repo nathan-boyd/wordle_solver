@@ -1,10 +1,9 @@
 import logging
-
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-from pyvirtualdisplay.display import Display
 import os
+
+from pyvirtualdisplay.display import Display
+from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
 
 IMPLICIT_WAIT_SECONDS = 5
 
@@ -12,44 +11,39 @@ IMPLICIT_WAIT_SECONDS = 5
 class BrowserBuilder:
 
     def setup_webdriver(self):
-        self.logger.info('Setting chrome options')
-        chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument("--incognito")
-
-        self.logger.info('Initializing Chrome browser')
-        return webdriver.Chrome(chrome_options=chrome_options, service=Service(ChromeDriverManager().install()))
+        self.logger.info('setting driver options')
+        driver_options = webdriver.ChromeOptions()
+        driver_options.add_argument("--incognito")
+        self.logger.info('initializing driver')
+        return webdriver.Chrome(ChromeDriverManager().install(), options=driver_options)
 
     def setup_headless_webdriver(self):
-        self.logger.info('Setting chrome options')
-        chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument("--incognito")
-        chrome_options.add_experimental_option('prefs', {
+        self.logger.info('setting chrome options')
+        driver_options = webdriver.ChromeOptions()
+        driver_options.add_argument('--no-sandbox')
+        driver_options.add_argument("--incognito")
+        driver_options.add_experimental_option('prefs', {
             'download.default_directory': os.getcwd(),
             'download.prompt_for_download': False,
         })
+        self.logger.info('initializing driver')
+        return webdriver.Chrome(chrome_options=driver_options)
 
-        self.logger.info('Initializing Chrome browser')
-        return webdriver.Chrome(chrome_options=chrome_options)
-
-    def build_browser(self):
-        return self.webdriver
+    webdriver = None
 
     def __init__(self, in_container):
         self.logger = logging.getLogger("builder")
-
         match in_container:
             case True:
-                self.logger.info('Setting up virtual display')
+                self.logger.info('setting up virtual display')
                 self.display = Display(visible=False, size=(800, 600))
                 self.display.start()
-                self.logger.info('Initialized virtual display')
-                self.logger.info('Configuring browser')
+                self.logger.info('initialized virtual display')
+                self.logger.info('configuring browser')
                 self.webdriver = self.setup_headless_webdriver()
             case False:
-                self.logger.info('Configuring browser')
+                self.logger.info('configuring browser')
                 self.webdriver = self.setup_webdriver()
-
         self.webdriver.implicitly_wait(IMPLICIT_WAIT_SECONDS)
         self.webdriver.set_window_size(650, 760)
         self.webdriver.set_window_position(0, 0)

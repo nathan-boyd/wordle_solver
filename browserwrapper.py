@@ -22,20 +22,14 @@ class BrowserWrapper:
     def check_wait_iter(self, waited_ms, max_waited_ms):
         if waited_ms > max_waited_ms:
             self.shoot_screen("timeout")
-            raise TimeoutError("Timed out waiting for results")
+            raise TimeoutError("timed out waiting for results")
 
     def submit_word(self, word, attempt):
         self.keyboard.type(word)
         self.keyboard.press(Key.enter)
 
-        # get letter rows
-        rows = self.game_board.find_elements(By.TAG_NAME, 'game-row')
-        row = self.webdriver.execute_script('return arguments[0].shadowRoot', rows[attempt])
-
-        # get tiles from row
+        row = self.webdriver.execute_script('return arguments[0].shadowRoot', self.rows[attempt])
         tiles = row.find_elements(By.CSS_SELECTOR, "game-tile")
-
-        # wait for last tile animation to stop
         last_tile = self.get_element_from_shadow_with_query(tiles[4], "div")
 
         waited_ms = self.wait_for_condition_end(self.tile_is_idle, last_tile)
@@ -91,7 +85,7 @@ class BrowserWrapper:
         # get text summary
         game_summary = pyperclip.paste()
 
-        # the linux chromium driver uses white squares instead of black for absent letters
+        # the linux chrome driver uses white squares instead of black for absent letters
         white_square = "⬜"
         black_square = "⬛"
         game_summary = game_summary.replace(white_square, black_square)
@@ -108,9 +102,9 @@ class BrowserWrapper:
         return self.webdriver.execute_script(tpl, shadow)
 
     def exit_handler(self):
-        self.logger.info("Shutting down webdriver")
+        self.logger.info("shutting down webdriver")
         self.webdriver.close()
-        self.logger.info("Webdriver is shut down")
+        self.logger.info("webdriver is shut down")
 
     def __init__(self, in_container, output_dir, util):
 
@@ -120,13 +114,13 @@ class BrowserWrapper:
         self.util = util
 
         browser_builder = BrowserBuilder(in_container)
-        self.webdriver = browser_builder.build_browser()
+        self.webdriver = browser_builder.webdriver
 
-        self.logger.info('Opening Wordle URL')
+        self.logger.info('opening wordle url')
         self.webdriver.get(WORDLE_URL)
 
-        self.logger.info('Accessed %s', WORDLE_URL)
-        self.logger.info('Page title: %s', self.webdriver.title)
+        self.logger.info('accessed %s', WORDLE_URL)
+        self.logger.info('page title: %s', self.webdriver.title)
         self.shoot_screen("init")
 
         # click to close welcome screen
@@ -135,6 +129,7 @@ class BrowserWrapper:
         # the main game div
         self.game_app = self.webdriver.find_element(By.TAG_NAME, 'game-app')
         self.game_board = self.get_element_from_shadow_by_id(self.game_app, "board")
+        self.rows = self.game_board.find_elements(By.TAG_NAME, 'game-row')
 
         # keyboard init needs to happen after creation of virtual display
         self.keyboard = Controller()

@@ -19,15 +19,15 @@ class SocialSharer:
         if solved:
             message = f"My #wordle solver completed #wordle{game_number} in {solve_time_seconds} seconds."
         else:
-            message = f"My #wordle solver couldn't quite figure out #wordle{game_number}, but it tried its best and took {solve_time_seconds} seconds."
+            message = f"My #wordle solver couldn't quite figure out #wordle{game_number}, but it tried best and took {solve_time_seconds} seconds."
 
         game_summary = message + "\n" + data
 
         if self.debug:
-            self.logger.info("Not sending tweet in debug mode")
+            self.logger.info("not sending tweet in debug mode")
             self.logger.info(game_summary)
         else:
-            self.logger.info("Tweeting summary")
+            self.logger.info("tweeting summary")
             self.logger.info(game_summary)
             tweet_res = self.twitter_api.PostUpdate(game_summary)
             self.logger.info(tweet_res)
