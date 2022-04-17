@@ -37,7 +37,6 @@ class BrowserWrapper:
 
         waited_ms = self.wait_for_condition_end(self.tile_is_not_idle, last_tile)
         self.logger.info(f"Waited {waited_ms}ms for tile animation to stop")
-
         self.shoot_screen(f"attempt_{attempt}")
 
         letter_results = []
@@ -48,8 +47,8 @@ class BrowserWrapper:
 
     def wait_for_condition_end(self, condition, *args):
         wait_ms = 0
-        max_wait_ms = 5000
-        wait_duration_ms = 50
+        max_wait_ms = 10000
+        wait_duration_ms = 100
 
         # wait for animation to start after submitting
         while condition(*args) and wait_ms < max_wait_ms:
@@ -119,14 +118,13 @@ class BrowserWrapper:
         self.logger.info('opening wordle url')
         self.webdriver.get(WORDLE_URL)
 
-        self.logger.info('accessed %s', WORDLE_URL)
-        self.logger.info('page title: %s', self.webdriver.title)
-        self.shoot_screen("init")
+        self.logger.info(f'accessed url: {WORDLE_URL}')
+        self.logger.info(f'page title: {self.webdriver.title}')
+        self.shoot_screen("game_start")
 
-        # click to close welcome screen
+        # close welcome screen
         self.webdriver.find_element(By.TAG_NAME, 'html').click()
 
-        # the main game div
         self.game_app = self.webdriver.find_element(By.TAG_NAME, 'game-app')
         self.game_board = self.get_element_from_shadow_by_id(self.game_app, "board")
         self.rows = self.game_board.find_elements(By.TAG_NAME, 'game-row')
