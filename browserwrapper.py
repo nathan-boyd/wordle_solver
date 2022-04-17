@@ -4,6 +4,7 @@ import pyperclip
 from pynput.keyboard import Key, Controller
 import time
 from browserbuilder import BrowserBuilder
+from result import Result
 
 MAX_WAIT_MS = 10000
 WAIT_DURATION_MS = 100
@@ -32,15 +33,16 @@ class BrowserWrapper:
         last_tile = self.get_element_from_shadow_with_query(tiles[4], "div")
 
         waited_ms = self.wait_for_condition_end(self.tile_is_idle, last_tile)
-        self.logger.info(f"Waited {waited_ms}ms for tile animation to start")
+        self.logger.info(f"waited {waited_ms}ms for tile animation to start")
 
         waited_ms = self.wait_for_condition_end(self.tile_is_not_idle, last_tile)
-        self.logger.info(f"Waited {waited_ms}ms for tile animation to stop")
+        self.logger.info(f"waited {waited_ms}ms for tile animation to stop")
         self.shoot_screen(f"attempt_{attempt}")
 
         letter_results = []
         for tile in tiles:
-            letter_results.append([tile.get_attribute("evaluation")][0])
+            res = [tile.get_attribute("evaluation")][0]
+            letter_results.append(Result[res.upper()])
 
         return letter_results
 

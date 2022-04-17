@@ -19,7 +19,7 @@ class SocialSharer:
         if solved:
             message = f"My #wordle solver completed #wordle{game_number} in {solve_time_seconds} seconds."
         else:
-            message = f"My #wordle solver couldn't quite figure out #wordle{game_number}, but it tried best and took {solve_time_seconds} seconds."
+            message = f"My #wordle solver couldn't quite figure out #wordle{game_number}."
 
         game_summary = message + "\n" + data
 

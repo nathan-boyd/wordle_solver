@@ -6,6 +6,7 @@ from collections import Counter
 from datetime import date
 from itertools import chain
 from pathlib import Path
+from result import Result
 
 MAX_ATTEMPTS = 6
 MAX_WORD_LENGTH = 5
@@ -45,6 +46,7 @@ class WordleSolver:
             score += CHAR_FREQUENCY[char]
         if attempt > 2 and word in COMMON_WORDS:
             score += 1
+            self.logger.info(f"added common word preference to {word}")
         return score / (MAX_WORD_LENGTH - len(set(word)) + 1)
 
     # sort words by character frequency
@@ -89,7 +91,7 @@ class WordleSolver:
 
         selected_word = word_options_with_same_commonality[0][0]
         possible_words.remove(selected_word)
-        return selected_word
+        return selected_word, sorted_words[:5]
 
     def solve_wordle(self):
         start_time_ms = self.util.current_milli_time()
@@ -112,16 +114,16 @@ class WordleSolver:
         for attempt_count in range(0, MAX_ATTEMPTS):
             self.logger.info(f"beginning attempt {attempt_count}/{MAX_ATTEMPTS}")
             self.logger.info(f"{len(possible_words)} possible words")
-            self.print_frequency(self.sort_by_commonality(possible_words, attempt_count)[:5])
 
-            word = self.get_most_likely_word(possible_words, attempt_count)
+            word, top_candidates = self.get_most_likely_word(possible_words, attempt_count)
+            self.print_frequency(top_candidates)
             self.logger.info(f"{word.upper()} is the most likely answer")
 
             letter_results = self.browser_wrapper.submit_word(word, attempt_count)
             self.logger.info(f"results of {word.upper()}")
 
             self.evaluate_results(letter_results, word, word_vector)
-            if letter_results.count("correct") == MAX_WORD_LENGTH:
+            if letter_results.count(Result.CORRECT) == MAX_WORD_LENGTH:
                 return True, word
 
             possible_words = self.filter(word_vector, possible_words)
@@ -131,13 +133,13 @@ class WordleSolver:
         for idx, status in enumerate(letter_results):
             message_template = f"letter {word[idx].upper()} {status}"
             match status:
-                case "correct":
+                case Result.CORRECT:
                     self.logger.info(message_template)
                     word_vector[idx] = {word[idx]}
-                case "present":
+                case Result.PRESENT:
                     self.logger.info(message_template)
                     word_vector[idx].discard(word[idx])
-                case "absent":
+                case Result.ABSENT:
                     self.logger.info(message_template)
                     for vector in word_vector:
                         if len(vector) != 1:

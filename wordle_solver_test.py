@@ -1,6 +1,8 @@
 import os
 from datetime import date
 import pytest
+
+from result import Result
 from util import Util
 from wordlesolver import WordleSolver
 
@@ -14,11 +16,11 @@ class MockBrowserWrapper:
         result = []
         for idx, val in enumerate(word):
             if val == self.target_word[idx]:
-                result.append('correct')
+                result.append(Result.CORRECT)
             elif val in self.target_word:
-                result.append('present')
+                result.append(Result.PRESENT)
             else:
-                result.append('absent')
+                result.append(Result.ABSENT)
         return result
 
     def save_game_summary(self):
