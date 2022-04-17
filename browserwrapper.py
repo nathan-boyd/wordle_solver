@@ -3,21 +3,20 @@ from selenium.webdriver.common.by import By
 import pyperclip
 from pynput.keyboard import Key, Controller
 import time
-
 from browserbuilder import BrowserBuilder
 
+MAX_WAIT_MS = 10000
+WAIT_DURATION_MS = 100
 WORDLE_URL = "https://www.nytimes.com/games/wordle/index.html"
 
 
 class BrowserWrapper:
 
-    @staticmethod
-    def tile_is_idle(tile):
+    def tile_is_idle(self, tile):
         return tile.get_attribute("data-animation") == "idle"
 
-    @staticmethod
-    def tile_is_not_idle(tile):
-        return tile.get_attribute("data-animation") != "idle"
+    def tile_is_not_idle(self, tile):
+        return not self.tile_is_idle(tile)
 
     def check_wait_iter(self, waited_ms, max_waited_ms):
         if waited_ms > max_waited_ms:
@@ -46,17 +45,15 @@ class BrowserWrapper:
         return letter_results
 
     def wait_for_condition_end(self, condition, *args):
-        wait_ms = 0
-        max_wait_ms = 10000
-        wait_duration_ms = 100
+        elapsed_wait_ms = 0
 
         # wait for animation to start after submitting
-        while condition(*args) and wait_ms < max_wait_ms:
-            self.wait(wait_duration_ms)
-            wait_ms += wait_duration_ms
+        while condition(*args) and elapsed_wait_ms < MAX_WAIT_MS:
+            self.wait(WAIT_DURATION_MS)
+            elapsed_wait_ms += WAIT_DURATION_MS
 
-        self.check_wait_iter(wait_ms, max_wait_ms)
-        return wait_ms
+        self.check_wait_iter(elapsed_wait_ms, MAX_WAIT_MS)
+        return elapsed_wait_ms
 
     def wait(self, ms):
         self.time_waiting_ms += ms
@@ -84,7 +81,8 @@ class BrowserWrapper:
         # get text summary
         game_summary = pyperclip.paste()
 
-        # the linux chrome driver uses white squares instead of black for absent letters
+        # the linux chrome driver uses white squares instead of black
+        # for absent letters, swap those out in game summary
         white_square = "⬜"
         black_square = "⬛"
         game_summary = game_summary.replace(white_square, black_square)

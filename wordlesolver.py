@@ -19,7 +19,7 @@ WORDS = {
     for word in Path(ALLOWED_STRINGS_FILE).read_text().splitlines()
 }
 
-# a list of words marked as common
+# a list of words marked as common, sourced from the google 10000 list
 COMMON_WORDS = {
     word.split(',')[1].lower()
     for word in Path(ALLOWED_STRINGS_FILE).read_text().splitlines()
@@ -29,29 +29,22 @@ COMMON_WORDS = {
 # a count of letter occurrences in the words list
 CHAR_COUNT = Counter(chain.from_iterable(WORDS))
 
-
-class FailedSolve(Exception):
-    pass
-
-
-class AllWordsEliminated(Exception):
-    pass
+# a set of all characters and their frequencies in WORDS
+CHAR_FREQUENCY = {
+    char: value / sum(CHAR_COUNT.values())
+    for char, value in CHAR_COUNT.items()
+}
 
 
 class WordleSolver:
-    # a set of all characters and their frequencies in WORDS
-    CHAR_FREQUENCY = {
-        char: value / sum(CHAR_COUNT.values())
-        for char, value in CHAR_COUNT.items()
-    }
-
-    # word scoring function that scores how common the letters are in a given
+    # word scoring function that determines how common the letters are in a given word.
+    # adds preference for common words in attempts > 2
     def get_commonality(self, word, attempt):
         score = 0.0
+        for char in word:
+            score += CHAR_FREQUENCY[char]
         if attempt > 2 and word in COMMON_WORDS:
             score += 1
-        for char in word:
-            score += self.CHAR_FREQUENCY[char]
         return score / (MAX_WORD_LENGTH - len(set(word)) + 1)
 
     # sort words by character frequency
@@ -63,6 +56,7 @@ class WordleSolver:
             reverse=True,
         )
 
+    # prints the commonality of the supplied list of words
     def print_frequency(self, word_commonalities):
         for (word, freq) in word_commonalities:
             template = f"{word.upper():<5} | {freq:<5.4}"
@@ -106,7 +100,8 @@ class WordleSolver:
         self.time_to_solve = total_time - self.time_waiting_ms
         self.logger.info(f"time waiting {self.time_waiting_ms} ms")
         self.logger.info(f"calculated time to solve {self.time_to_solve} ms")
-        self.logger.info(f"solution Word {word.upper()}")
+        if solved:
+            self.logger.info(f"solution word is: {word.upper()}")
         self.browser_wrapper.save_game_summary()
         return solved, self.time_to_solve
 

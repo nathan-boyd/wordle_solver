@@ -1,8 +1,6 @@
 import os
 from datetime import date
-
 import pytest
-
 from util import Util
 from wordlesolver import WordleSolver
 
@@ -11,7 +9,7 @@ class MockBrowserWrapper:
     def __init__(self, target_word):
         self.target_word = target_word
 
-    def submit_word(self, word, attempt):
+    def submit_word(self, word, _):
 
         result = []
         for idx, val in enumerate(word):

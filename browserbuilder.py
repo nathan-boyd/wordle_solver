@@ -1,6 +1,5 @@
 import logging
 import os
-
 from pyvirtualdisplay.display import Display
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
@@ -9,6 +8,8 @@ IMPLICIT_WAIT_SECONDS = 5
 
 
 class BrowserBuilder:
+
+    webdriver = None
 
     def setup_webdriver(self):
         self.logger.info('setting driver options')
@@ -28,8 +29,6 @@ class BrowserBuilder:
         })
         self.logger.info('initializing driver')
         return webdriver.Chrome(chrome_options=driver_options)
-
-    webdriver = None
 
     def __init__(self, in_container):
         self.logger = logging.getLogger("builder")
