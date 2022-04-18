@@ -44,7 +44,7 @@ class WordleSolver:
         score = 0.0
         for char in word:
             score += CHAR_FREQUENCY[char]
-        if attempt > 2 and word in COMMON_WORDS:
+        if attempt > 3 and word in COMMON_WORDS:
             score += 1
             self.logger.info(f"added common word preference to {word}")
         return score / (MAX_WORD_LENGTH - len(set(word)) + 1)
@@ -97,11 +97,13 @@ class WordleSolver:
         start_time_ms = self.util.current_milli_time()
         self.logger.info(f"solving wordle {date.today()}")
         solved, word = self.solve()
+
         end_time_ms = self.util.current_milli_time()
         total_time = end_time_ms - start_time_ms
         self.time_to_solve = total_time - self.time_waiting_ms
         self.logger.info(f"time waiting {self.time_waiting_ms} ms")
         self.logger.info(f"calculated time to solve {self.time_to_solve} ms")
+
         if solved:
             self.logger.info(f"solution word is: {word.upper()}")
         self.browser_wrapper.save_game_summary()
@@ -127,7 +129,7 @@ class WordleSolver:
                 return True, word
 
             possible_words = self.filter(word_vector, possible_words)
-        return False
+        return False, ""
 
     def evaluate_results(self, letter_results, word, word_vector):
         for idx, status in enumerate(letter_results):
