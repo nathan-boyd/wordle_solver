@@ -1,14 +1,14 @@
-import logging
 from selenium.webdriver.common.by import By
 import pyperclip
 from pynput.keyboard import Key, Controller
 import time
-from browserbuilder import BrowserBuilder
+
+import config
+from browser_builder import BrowserBuilder
+from logger import Logger
 from result import Result
 
-MAX_WAIT_MS = 10000
-WAIT_DURATION_MS = 100
-WORDLE_URL = "https://www.nytimes.com/games/wordle/index.html"
+logger = Logger.get_logger(__name__)
 
 
 class BrowserWrapper:
@@ -19,8 +19,8 @@ class BrowserWrapper:
     def tile_is_not_idle(self, tile):
         return not self.tile_is_idle(tile)
 
-    def check_wait_iter(self, waited_ms, max_waited_ms):
-        if waited_ms > max_waited_ms:
+    def check_wait_iter(self, waited_ms, max_wait_ms):
+        if waited_ms > max_wait_ms:
             self.shoot_screen("timeout")
             raise TimeoutError("timed out waiting for results")
 
@@ -33,10 +33,10 @@ class BrowserWrapper:
         last_tile = self.get_element_from_shadow_with_query(tiles[4], "div")
 
         waited_ms = self.wait_for_condition_end(self.tile_is_idle, last_tile)
-        self.logger.info(f"waited {waited_ms}ms for tile animation to start")
+        logger.info(f"waited {waited_ms}ms for tile animation to start")
 
         waited_ms = self.wait_for_condition_end(self.tile_is_not_idle, last_tile)
-        self.logger.info(f"waited {waited_ms}ms for tile animation to stop")
+        logger.info(f"waited {waited_ms}ms for tile animation to stop")
         self.shoot_screen(f"attempt_{attempt}")
 
         letter_results = []
@@ -50,11 +50,11 @@ class BrowserWrapper:
         elapsed_wait_ms = 0
 
         # wait for animation to start after submitting
-        while condition(*args) and elapsed_wait_ms < MAX_WAIT_MS:
-            self.wait(WAIT_DURATION_MS)
-            elapsed_wait_ms += WAIT_DURATION_MS
+        while condition(*args) and elapsed_wait_ms < config.max_wait_ms:
+            self.wait(config.wait_duration_ms)
+            elapsed_wait_ms += config.wait_duration_ms
 
-        self.check_wait_iter(elapsed_wait_ms, MAX_WAIT_MS)
+        self.check_wait_iter(elapsed_wait_ms, config.max_wait_ms)
         return elapsed_wait_ms
 
     def wait(self, ms):
@@ -101,25 +101,23 @@ class BrowserWrapper:
         return self.webdriver.execute_script(tpl, shadow)
 
     def exit_handler(self):
-        self.logger.info("shutting down webdriver")
+        logger.info("shutting down webdriver")
         self.webdriver.close()
-        self.logger.info("webdriver is shut down")
+        logger.info("webdriver is shut down")
 
     def __init__(self, in_container, output_dir, util):
 
         self.time_waiting_ms = 0
-        self.logger = logging.getLogger("browser")
         self.output_dir = output_dir
         self.util = util
 
         browser_builder = BrowserBuilder(in_container)
         self.webdriver = browser_builder.webdriver
 
-        self.logger.info('opening wordle url')
-        self.webdriver.get(WORDLE_URL)
+        logger.info('opening wordle url')
+        self.webdriver.get(config.wordle_url)
 
-        self.logger.info(f'accessed url: {WORDLE_URL}')
-        self.logger.info(f'page title: {self.webdriver.title}')
+        logger.info(f'accessed page: {self.webdriver.title}')
         self.shoot_screen("game_start")
 
         # close welcome screen

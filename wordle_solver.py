@@ -1,4 +1,3 @@
-import logging
 import operator
 import os
 import string
@@ -7,6 +6,7 @@ from datetime import date
 from itertools import chain
 from pathlib import Path
 from result import Result
+from logger import Logger
 
 MAX_ATTEMPTS = 6
 MAX_WORD_LENGTH = 5
@@ -36,6 +36,8 @@ CHAR_FREQUENCY = {
     for char, value in CHAR_COUNT.items()
 }
 
+logger = Logger.get_logger(__name__)
+
 
 class WordleSolver:
     # word scoring function that determines how common the letters are in a given word.
@@ -46,7 +48,7 @@ class WordleSolver:
             score += CHAR_FREQUENCY[char]
         if attempt > 3 and word in COMMON_WORDS:
             score += 1
-            self.logger.info(f"added common word preference to {word}")
+            logger.info(f"added common word preference to {word}")
         return score / (MAX_WORD_LENGTH - len(set(word)) + 1)
 
     # sort words by character frequency
@@ -62,7 +64,7 @@ class WordleSolver:
     def print_frequency(self, word_commonalities):
         for (word, freq) in word_commonalities:
             template = f"{word.upper():<5} | {freq:<5.4}"
-            self.logger.info(template)
+            logger.info(template)
 
     def apply_vector(self, word, word_vector):
         for letter, v_letter in zip(word, word_vector):
@@ -75,7 +77,7 @@ class WordleSolver:
 
     def get_most_likely_word(self, possible_words, attempt):
         if len(possible_words) <= 0:
-            self.logger.error("all words eliminated")
+            logger.error("all words eliminated")
 
         idx = 0
         sorted_words = self.sort_by_commonality(possible_words, attempt)
@@ -95,17 +97,17 @@ class WordleSolver:
 
     def solve_wordle(self):
         start_time_ms = self.util.current_milli_time()
-        self.logger.info(f"solving wordle {date.today()}")
+        logger.info(f"solving wordle {date.today()}")
         solved, word = self.solve()
 
         end_time_ms = self.util.current_milli_time()
         total_time = end_time_ms - start_time_ms
         self.time_to_solve = total_time - self.time_waiting_ms
-        self.logger.info(f"time waiting {self.time_waiting_ms} ms")
-        self.logger.info(f"calculated time to solve {self.time_to_solve} ms")
+        logger.info(f"time waiting {self.time_waiting_ms} ms")
+        logger.info(f"calculated time to solve {self.time_to_solve} ms")
 
         if solved:
-            self.logger.info(f"solution word is: {word.upper()}")
+            logger.info(f"solution word is: {word.upper()}")
         self.browser_wrapper.save_game_summary()
         return solved, self.time_to_solve
 
@@ -114,15 +116,15 @@ class WordleSolver:
         word_vector = [set(string.ascii_lowercase) for _ in range(MAX_WORD_LENGTH)]
 
         for attempt_count in range(0, MAX_ATTEMPTS):
-            self.logger.info(f"beginning attempt {attempt_count}/{MAX_ATTEMPTS}")
-            self.logger.info(f"{len(possible_words)} possible words")
+            logger.info(f"beginning attempt {attempt_count}/{MAX_ATTEMPTS}")
+            logger.info(f"{len(possible_words)} possible words")
 
             word, top_candidates = self.get_most_likely_word(possible_words, attempt_count)
             self.print_frequency(top_candidates)
-            self.logger.info(f"{word.upper()} is the most likely answer")
+            logger.info(f"{word.upper()} is the most likely answer")
 
             letter_results = self.browser_wrapper.submit_word(word, attempt_count)
-            self.logger.info(f"results of {word.upper()}")
+            logger.info(f"results of {word.upper()}")
 
             self.evaluate_results(letter_results, word, word_vector)
             if letter_results.count(Result.CORRECT) == MAX_WORD_LENGTH:
@@ -136,21 +138,19 @@ class WordleSolver:
             message_template = f"letter {word[idx].upper()} {status}"
             match status:
                 case Result.CORRECT:
-                    self.logger.info(message_template)
+                    logger.info(message_template)
                     word_vector[idx] = {word[idx]}
                 case Result.PRESENT:
-                    self.logger.info(message_template)
+                    logger.info(message_template)
                     word_vector[idx].discard(word[idx])
                 case Result.ABSENT:
-                    self.logger.info(message_template)
+                    logger.info(message_template)
                     for vector in word_vector:
                         if len(vector) != 1:
                             vector.discard(word[idx])
 
     def __init__(self, output_dir, browser_wrapper, util):
-        self.logger = logging.getLogger("solver")
-        self.logger.info('initializing wordleSolver')
-
+        logger.info('initializing wordleSolver')
         self.util = util
 
         # directory for screenshot, logs, and results for twitter

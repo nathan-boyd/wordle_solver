@@ -1,9 +1,9 @@
 import logging
+
 from util import Util
 
 
 class ColorFormatter(logging.Formatter):
-
     grey = "\x1b[38;20m"
     yellow = "\x1b[33;20m"
     red = "\x1b[31;20m"
@@ -29,7 +29,6 @@ class ColorFormatter(logging.Formatter):
 
 
 class FileFormatter(logging.Formatter):
-
     format = "[%(asctime)s] [%(name).6s] [%(levelname).4s] [%(filename)s:%(lineno)d] %(message)s"
 
     FORMATS = {
@@ -64,3 +63,17 @@ class CustomLogger(logging.Logger):
         self.addHandler(file_handler)
 
         return
+
+
+class LogWrapper:
+
+    def get_logger(self):
+        pass
+
+
+class Logger(LogWrapper):
+
+    @staticmethod
+    def get_logger(name):
+        logging.setLoggerClass(CustomLogger)
+        return logging.getLogger(name)

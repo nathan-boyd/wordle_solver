@@ -1,13 +1,14 @@
-import logging
 import os
 import traceback
 from pathlib import Path
 
-from browserwrapper import BrowserWrapper
-from logger import CustomLogger
-from socialsharer import SocialSharer
+from browser_wrapper import BrowserWrapper
+from logger import Logger
+from social_sharer import SocialSharer
 from util import Util
-from wordlesolver import WordleSolver
+from wordle_solver import WordleSolver
+
+logger = Logger.get_logger(__name__)
 
 if __name__ == '__main__':
     util = Util()
@@ -18,8 +19,6 @@ if __name__ == '__main__':
     output_dir = util.get_output_directory()
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-    logging.setLoggerClass(CustomLogger)
-    logger = logging.getLogger("main")
     logger.info("initializing main")
     logger.info(f"output_dir: {output_dir}")
 

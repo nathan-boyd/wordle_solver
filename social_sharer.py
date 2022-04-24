@@ -1,7 +1,11 @@
-import logging
-import twitter
-import config
 import re
+
+import twitter
+
+import twitter_config
+from logger import Logger
+
+logger = Logger.get_logger(__name__)
 
 
 class SocialSharer:
@@ -24,20 +28,19 @@ class SocialSharer:
         game_summary = message + "\n" + data
 
         if self.debug:
-            self.logger.info("not sending tweet in debug mode")
-            self.logger.info(game_summary)
+            logger.info("not sending tweet in debug mode")
+            logger.info(game_summary)
         else:
-            self.logger.info("tweeting summary")
-            self.logger.info(game_summary)
+            logger.info("tweeting summary")
+            logger.info(game_summary)
             tweet_res = self.twitter_api.PostUpdate(game_summary)
-            self.logger.info(tweet_res)
+            logger.info(tweet_res)
 
     def __init__(self, debug, output_dir):
         self.output_dir = output_dir
-        self.logger = logging.getLogger("social")
         self.debug = debug
         self.logs_dir = output_dir
-        self.twitter_api = twitter.Api(consumer_key=config.consumer_key,
-                                       consumer_secret=config.consumer_secret,
-                                       access_token_key=config.access_token,
-                                       access_token_secret=config.access_token_secret)
+        self.twitter_api = twitter.Api(consumer_key=twitter_config.consumer_key,
+                                       consumer_secret=twitter_config.consumer_secret,
+                                       access_token_key=twitter_config.access_token,
+                                       access_token_secret=twitter_config.access_token_secret)

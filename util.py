@@ -1,6 +1,5 @@
 import time
 import os
-import logging
 from datetime import date
 from distutils.util import strtobool
 
@@ -38,6 +37,3 @@ class Util:
             output_dir = f"{app_dir}/logs/{date.today().strftime('%Y-%m-%d')}"
 
         return output_dir
-
-    def __init__(self):
-        self.logger = logging.getLogger()

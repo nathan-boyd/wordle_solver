@@ -4,7 +4,7 @@ import pytest
 
 from result import Result
 from util import Util
-from wordlesolver import WordleSolver
+from wordle_solver import WordleSolver
 
 
 class MockBrowserWrapper:

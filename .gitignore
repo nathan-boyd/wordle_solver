@@ -2,5 +2,5 @@ __pycache__
 .DS_STORE
 *logs
 .idea
-config.py
+twitter_config.py
 venv
