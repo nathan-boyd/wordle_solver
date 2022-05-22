@@ -1,6 +1,7 @@
 import logging
 
 from util import Util
+from pathlib import Path
 
 
 class ColorFormatter(logging.Formatter):
@@ -48,14 +49,15 @@ class FileFormatter(logging.Formatter):
 class CustomLogger(logging.Logger):
 
     def __init__(self, name):
+        util = Util()
+        output_dir = util.get_output_directory()
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
+
         logging.Logger.__init__(self, name, logging.DEBUG)
 
         console = logging.StreamHandler()
         console.setFormatter(ColorFormatter())
         self.addHandler(console)
-
-        util = Util()
-        output_dir = util.get_output_directory()
 
         # single process logging is thread safe, if we multiproc we'll need to change this
         file_handler = logging.FileHandler(f"{output_dir}/wordle.log")
@@ -63,7 +65,6 @@ class CustomLogger(logging.Logger):
         self.addHandler(file_handler)
 
         return
-
 
 class LogWrapper:
 

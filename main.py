@@ -15,9 +15,7 @@ if __name__ == '__main__':
     debug = util.get_bool_from_env("DEBUG")
     in_container = util.get_bool_from_env("RUNNING_IN_CONTAINER")
     app_dir = os.path.dirname(os.path.realpath(__file__))
-
     output_dir = util.get_output_directory()
-    Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     logger.info("initializing main")
     logger.info(f"output_dir: {output_dir}")
